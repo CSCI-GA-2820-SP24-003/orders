@@ -15,15 +15,14 @@
 ######################################################################
 
 """
-Pet Store Service
+Orders Service
 
-This service implements a REST API that allows you to Create, Read, Update
-and Delete Pets from the inventory of pets in the PetShop
+This service implements a REST API that allows you to manage Orders for a financial service.
 """
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import YourResourceModel
+from service.models.persistent_base import Order, Item
 from service.common import status  # HTTP Status Codes
 
 
@@ -32,9 +31,13 @@ from service.common import status  # HTTP Status Codes
 ######################################################################
 @app.route("/")
 def index():
-    """ Root URL response """
+    """Root URL response"""
     return (
-        "Reminder: return some useful information in json format about the service here",
+        jsonify(
+            name="Orders REST API Service",
+            version="1.0",
+            paths=url_for("list_orders", _external=True),
+        ),
         status.HTTP_200_OK,
     )
 

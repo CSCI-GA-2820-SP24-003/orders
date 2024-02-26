@@ -23,6 +23,11 @@ from flask import Flask
 from service import config
 from service.common import log_handlers
 
+# from service.models import persistent_base
+from .persistent_base import db, DataValidationError
+from .item import Item
+from .order import Order
+
 
 ############################################################
 # Initialize the Flask instance
@@ -35,17 +40,18 @@ def create_app():
 
     # Initialize Plugins
     # pylint: disable=import-outside-toplevel
-    from service.models import db
-    db.init_app(app)
+    Order.init_db(app)
+    Item.init_db(app)
 
     with app.app_context():
         # Dependencies require we import the routes AFTER the Flask app is created
         # pylint: disable=wrong-import-position, wrong-import-order, unused-import
-        from service import routes, models  # noqa: F401 E402
+        from service import routes  # noqa: F401 E402
         from service.common import error_handlers, cli_commands  # noqa: F401, E402
 
         try:
-            db.create_all()
+            Order.create_all()
+            Item.create_all()
         except Exception as error:  # pylint: disable=broad-except
             app.logger.critical("%s: Cannot continue", error)
             # gunicorn requires exit code 4 to stop spawning workers when they die

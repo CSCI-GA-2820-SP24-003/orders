@@ -11,13 +11,13 @@ logger = logging.getLogger("flask.app")
 ######################################################################
 #  I T E M   M O D E L
 ######################################################################
-class Item(PersistentBase):
+class Item(db.Model, PersistentBase):
     """
     Class that represents an Item
     """
 
     # Table Schema
-    item_id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(
         db.Integer, db.ForeignKey("order.id", ondelete="CASCADE"), nullable=False
     )
@@ -29,7 +29,7 @@ class Item(PersistentBase):
     description = db.Column(db.String(1024))
 
     def __repr__(self):
-        return f"<Item {self.name} id=[{self.item_id}] order[{self.order_id}]>"
+        return f"<Item {self.name} id=[{self.id}] order[{self.order_id}]>"
 
     def __str__(self):
         return f"{self.name}: {self.quantity}, {self.unit_price}, {self.total_price} {self.description}"

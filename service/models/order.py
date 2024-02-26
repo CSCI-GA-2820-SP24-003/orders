@@ -43,7 +43,7 @@ class OrderStatus(Enum):
     RETURNED = 6
 
 
-class Order(PersistentBase):
+class Order(db.Model, PersistentBase):
     """
     Class that represents an Order
     """
@@ -64,7 +64,7 @@ class Order(PersistentBase):
     items = db.relationship("Item", backref="order", passive_deletes=True)
 
     def __repr__(self):
-        return f"<Order {self.name} id=[{self.id}]>"
+        return f"<Order {self.customer_id} id=[{self.id}]>"
 
     def serialize(self):
         """Converts an Order into a dictionary"""

@@ -22,7 +22,7 @@ This service implements a REST API that allows you to manage Orders for a financ
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models.persistent_base import Order, Item
+from service.models import Order, Item
 from service.common import status  # HTTP Status Codes
 
 
@@ -36,7 +36,8 @@ def index():
         jsonify(
             name="Orders REST API Service",
             version="1.0",
-            paths=url_for("list_orders", _external=True),
+            # Todo: Uncomment the next line when GET /orders is implemented
+            # paths=url_for("list_orders", _external=True),
         ),
         status.HTTP_200_OK,
     )

@@ -3,7 +3,7 @@ Web Server Gateway Interface (WSGI) entry point
 """
 
 import os
-from service.models import create_app
+from service import create_app
 
 PORT = int(os.getenv("PORT", "8000"))
 

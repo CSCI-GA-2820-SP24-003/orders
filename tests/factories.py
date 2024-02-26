@@ -19,7 +19,7 @@ Test Factory to make fake objects for testing
 """
 from datetime import date
 import factory
-from factory.fuzzy import FuzzyChoice, FuzzyDate
+from factory.fuzzy import FuzzyChoice, FuzzyDate, FuzzyDecimal, FuzzyInteger
 from service.models import Order, Item
 
 
@@ -36,12 +36,12 @@ class OrderFactory(factory.Factory):
     customer_id = None
     order_date = FuzzyDate(date(2008, 1, 1))
     status = FuzzyChoice(choices=["STARTED", "PACKING", "SHIPPING"])
-    shipping_address = factory.Faker("shipping_address")
-    total_amount = factory.Faker(10)
-    payment_method = factory.Faker("payment_method")
-    shipping_cost = factory.Faker(1)
+    shipping_address = factory.Faker("address")
+    total_amount = FuzzyDecimal(0.5, 9999.99)
+    payment_method = FuzzyChoice(choices=["CREDIT", "DEBIT", "COD"])
+    shipping_cost = FuzzyDecimal(0.5, 99.99)
     expected_date = FuzzyDate(date(2009, 1, 1))
-    order_notes = factory.Faker("order_notes")
+    order_notes = factory.Faker("sentence", nb_words=4)
 
     # the many side of relationships can be a little wonky in factory boy:
     # https://factoryboy.readthedocs.io/en/latest/recipes.html#simple-many-to-many-relationship
@@ -71,8 +71,8 @@ class ItemFactory(factory.Factory):
     order_id = None
     product_id = None
     name = FuzzyChoice(choices=["ruler", "drill", "hammer"])
-    quantity = factory.Faker(2)
-    unit_price = factory.Faker(2)
-    total_price = factory.Faker(4)
-    description = factory.Faker("description")
+    quantity = FuzzyInteger(1, 99)
+    unit_price = FuzzyDecimal(0.5, 999.99)
+    total_price = FuzzyDecimal(0.5, 9999.99)
+    description = factory.Faker("sentence", nb_words=6)
     order = factory.SubFactory(OrderFactory)

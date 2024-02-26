@@ -13,57 +13,11 @@
 # limitations under the License.
 
 """
-Package: service
-Package for the application models and service routes
-This module creates and configures the Flask app and sets up the logging
-and SQL database
-"""
-import sys
-from flask import Flask
-from service import config
-from service.common import log_handlers
+Models for Wishlist and Item
 
-# from service.models import persistent_base
+All of the models are stored in this package
+"""
+
 from .persistent_base import db, DataValidationError
 from .item import Item
 from .order import Order
-
-
-############################################################
-# Initialize the Flask instance
-############################################################
-def create_app():
-    """Initialize the core application."""
-    # Create Flask application
-    app = Flask(__name__)
-    app.config.from_object(config)
-
-    # Initialize Plugins
-    # pylint: disable=import-outside-toplevel
-    Order.init_db(app)
-    Item.init_db(app)
-
-    with app.app_context():
-        # Dependencies require we import the routes AFTER the Flask app is created
-        # pylint: disable=wrong-import-position, wrong-import-order, unused-import
-        from service import routes  # noqa: F401 E402
-        from service.common import error_handlers, cli_commands  # noqa: F401, E402
-
-        try:
-            Order.create_all()
-            Item.create_all()
-        except Exception as error:  # pylint: disable=broad-except
-            app.logger.critical("%s: Cannot continue", error)
-            # gunicorn requires exit code 4 to stop spawning workers when they die
-            sys.exit(4)
-
-        # Set up logging for production
-        log_handlers.init_logging(app, "gunicorn.error")
-
-        app.logger.info(70 * "*")
-        app.logger.info("  S E R V I C E   R U N N I N G  ".center(70, "*"))
-        app.logger.info(70 * "*")
-
-        app.logger.info("Service initialized!")
-
-        return app

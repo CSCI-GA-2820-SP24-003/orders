@@ -91,3 +91,21 @@ class TestOrder(TestCase):
         self.assertEqual(items[0]["unit_price"], item.unit_price)
         self.assertEqual(items[0]["total_price"], item.total_price)
         self.assertEqual(items[0]["description"], item.description)
+
+    def test_deserialize_an_order(self):
+        """It should Deserialize an order"""
+        order = OrderFactory()
+        order.items.append(ItemFactory())
+        order.create()
+        serial_order = order.serialize()
+        new_order = Order()
+        new_order.deserialize(serial_order)
+        self.assertEqual(new_order.customer_id, order.customer_id)
+        self.assertEqual(new_order.order_date, order.order_date)
+        self.assertEqual(new_order.status, order.status)
+        self.assertEqual(new_order.shipping_address, order.shipping_address)
+        self.assertEqual(new_order.total_amount, order.total_amount)
+        self.assertEqual(new_order.payment_method, order.payment_method)
+        self.assertEqual(new_order.shipping_cost, order.shipping_cost)
+        self.assertEqual(new_order.expected_date, order.expected_date)
+        self.assertEqual(new_order.order_notes, order.order_notes)

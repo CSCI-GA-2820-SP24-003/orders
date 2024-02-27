@@ -22,7 +22,7 @@ import logging
 import os
 from unittest import TestCase
 from wsgi import app
-from service.models import Order, Item, db
+from service.models import Order, Item, DataValidationError, db
 from tests.factories import ItemFactory
 
 DATABASE_URI = os.getenv(
@@ -90,3 +90,20 @@ class TestItem(TestCase):
         self.assertEqual(new_item.unit_price, item.unit_price)
         self.assertEqual(new_item.total_price, item.total_price)
         self.assertEqual(new_item.description, item.description)
+
+    def test_deserialize_type_error(self):
+        """
+        It should raise an DataValidation Error when encountering an Type error
+        """
+
+        item = ItemFactory()
+        data = "bad data that raises an attribute error because it's not a dictionary"
+        self.assertRaises(DataValidationError, item.deserialize, data)
+
+    def test_deserailize_key_error(self):
+        """
+        It should raise a DataValidation Error when encountering a Key Error
+        """
+        item = ItemFactory()
+        data = {}
+        self.assertRaises(DataValidationError, item.deserialize, data)

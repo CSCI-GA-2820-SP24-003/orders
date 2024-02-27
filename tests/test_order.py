@@ -64,3 +64,30 @@ class TestOrder(TestCase):
     ######################################################################
     #  T E S T   C A S E S
     ######################################################################
+
+    def test_serialize_an_order(self):
+        """It should Serialize an order"""
+        order = OrderFactory()
+        item = ItemFactory()
+        order.items.append(item)
+        serial_order = order.serialize()
+        self.assertEqual(serial_order["id"], order.id)
+        self.assertEqual(serial_order["customer_id"], order.customer_id)
+        self.assertEqual(serial_order["order_date"], str(order.order_date))
+        self.assertEqual(serial_order["status"], order.status)
+        self.assertEqual(serial_order["shipping_address"], order.shipping_address)
+        self.assertEqual(serial_order["total_amount"], order.total_amount)
+        self.assertEqual(serial_order["payment_method"], order.payment_method)
+        self.assertEqual(serial_order["shipping_cost"], order.shipping_cost)
+        self.assertEqual(serial_order["expected_date"], str(order.expected_date))
+        self.assertEqual(serial_order["order_notes"], order.order_notes)
+        self.assertEqual(len(serial_order["items"]), 1)
+        items = serial_order["items"]
+        self.assertEqual(items[0]["id"], item.id)
+        self.assertEqual(items[0]["order_id"], item.order_id)
+        self.assertEqual(items[0]["product_id"], item.product_id)
+        self.assertEqual(items[0]["name"], item.name)
+        self.assertEqual(items[0]["quantity"], item.quantity)
+        self.assertEqual(items[0]["unit_price"], item.unit_price)
+        self.assertEqual(items[0]["total_price"], item.total_price)
+        self.assertEqual(items[0]["description"], item.description)

@@ -21,7 +21,8 @@ Test cases for Order Model
 import logging
 import os
 from unittest import TestCase
-from unittest.mock import patch
+
+# from unittest.mock import patch
 from wsgi import app
 from service.models import Order, Item, DataValidationError, db
 from tests.factories import OrderFactory, ItemFactory

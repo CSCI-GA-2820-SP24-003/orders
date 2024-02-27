@@ -119,13 +119,3 @@ class TestOrder(TestCase):
         """It should not Deserialize an order with a TypeError"""
         order = Order()
         self.assertRaises(DataValidationError, order.deserialize, [])
-
-    def test_deserialize_item_key_error(self):
-        """It should not Deserialize an item with a KeyError"""
-        item = Item()
-        self.assertRaises(DataValidationError, item.deserialize, {})
-
-    def test_deserialize_item_type_error(self):
-        """It should not Deserialize an item with a TypeError"""
-        item = Item()
-        self.assertRaises(DataValidationError, item.deserialize, [])

@@ -91,19 +91,12 @@ class TestItem(TestCase):
         self.assertEqual(new_item.total_price, item.total_price)
         self.assertEqual(new_item.description, item.description)
 
-    def test_deserialize_type_error(self):
-        """
-        It should raise an DataValidation Error when encountering an Type error
-        """
+    def test_deserialize_item_key_error(self):
+        """It should not Deserialize an item with a KeyError"""
+        item = Item()
+        self.assertRaises(DataValidationError, item.deserialize, {})
 
-        item = ItemFactory()
-        data = "bad data that raises an attribute error because it's not a dictionary"
-        self.assertRaises(DataValidationError, item.deserialize, data)
-
-    def test_deserailize_key_error(self):
-        """
-        It should raise a DataValidation Error when encountering a Key Error
-        """
-        item = ItemFactory()
-        data = {}
-        self.assertRaises(DataValidationError, item.deserialize, data)
+    def test_deserialize_item_type_error(self):
+        """It should not Deserialize an item with a TypeError"""
+        item = Item()
+        self.assertRaises(DataValidationError, item.deserialize, [])

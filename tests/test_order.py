@@ -109,3 +109,23 @@ class TestOrder(TestCase):
         self.assertEqual(new_order.shipping_cost, order.shipping_cost)
         self.assertEqual(new_order.expected_date, order.expected_date)
         self.assertEqual(new_order.order_notes, order.order_notes)
+
+    def test_deserialize_with_key_error(self):
+        """It should not Deserialize an order with a KeyError"""
+        order = Order()
+        self.assertRaises(DataValidationError, order.deserialize, {})
+
+    def test_deserialize_with_type_error(self):
+        """It should not Deserialize an order with a TypeError"""
+        order = Order()
+        self.assertRaises(DataValidationError, order.deserialize, [])
+
+    def test_deserialize_item_key_error(self):
+        """It should not Deserialize an item with a KeyError"""
+        item = Item()
+        self.assertRaises(DataValidationError, item.deserialize, {})
+
+    def test_deserialize_item_type_error(self):
+        """It should not Deserialize an item with a TypeError"""
+        item = Item()
+        self.assertRaises(DataValidationError, item.deserialize, [])

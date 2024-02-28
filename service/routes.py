@@ -20,20 +20,12 @@ Orders Service
 This service implements a REST API that allows you to manage Orders for a financial service.
 """
 
-<<<<<<< HEAD
 from flask import jsonify, request
-=======
-from flask import jsonify
->>>>>>> master
 
 # , request, url_for, abort
 from flask import current_app as app  # Import Flask application
 
-<<<<<<< HEAD
 from service.models import Order, Item
-=======
-# from service.models import Order, Item
->>>>>>> master
 from service.common import status  # HTTP Status Codes
 
 
@@ -58,7 +50,6 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
-<<<<<<< HEAD
 
 # Todo: Place your REST API code here ...
 ######################################################################
@@ -76,6 +67,3 @@ def list_orders():
     results = [order.serialize() for order in orders]
 
     return jsonify(results), status.HTTP_200_OK
-=======
-# Todo: Place your REST API code here ...
->>>>>>> master

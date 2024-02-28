@@ -8,7 +8,10 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, Order
+<<<<<<< HEAD
 from tests.factories import OrderFactory
+=======
+>>>>>>> master
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -56,6 +59,7 @@ class TestYourResourceService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
+<<<<<<< HEAD
     def test_list_orders(self):
         """It should list all orders"""
         sample_orders = [OrderFactory() for _ in range(5)]
@@ -88,4 +92,6 @@ class TestYourResourceService(TestCase):
             self.assertEqual(order_data["customer_id"], order.customer_id)
             # Add more assertions here to check other fields if necessary
 
+=======
+>>>>>>> master
     # Todo: Add your test cases here...

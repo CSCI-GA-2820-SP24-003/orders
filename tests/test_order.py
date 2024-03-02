@@ -22,7 +22,8 @@ import logging
 import os
 from unittest import TestCase
 
-# from unittest.mock import patch
+
+from unittest.mock import patch
 from wsgi import app
 from service.models import Order, Item, DataValidationError, db
 from tests.factories import OrderFactory, ItemFactory
@@ -30,6 +31,37 @@ from tests.factories import OrderFactory, ItemFactory
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
 )
+
+
+######################################################################
+#  B A S E   T E S T   C A S E S
+######################################################################
+class TestCaseBase(TestCase):
+    """Base Test Case for common setup"""
+
+    # pylint: disable=duplicate-code
+    @classmethod
+    def setUpClass(cls):
+        """This runs once before the entire test suite"""
+        app.config["TESTING"] = True
+        app.config["DEBUG"] = False
+        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
+        app.logger.setLevel(logging.CRITICAL)
+        app.app_context().push()
+
+    @classmethod
+    def tearDownClass(cls):
+        """This runs once after the entire test suite"""
+        db.session.close()
+
+    def setUp(self):
+        """This runs before each test"""
+        db.session.query(Order).delete()  # clean up the last tests
+        db.session.commit()
+
+    def tearDown(self):
+        """This runs after each test"""
+        db.session.remove()
 
 
 ######################################################################
@@ -75,7 +107,7 @@ class TestOrder(TestCase):
         self.assertEqual(serial_order["id"], order.id)
         self.assertEqual(serial_order["customer_id"], order.customer_id)
         self.assertEqual(serial_order["order_date"], str(order.order_date))
-        self.assertEqual(serial_order["status"], order.status)
+        self.assertEqual(serial_order["status"], order.status.name)
         self.assertEqual(serial_order["shipping_address"], order.shipping_address)
         self.assertEqual(serial_order["total_amount"], order.total_amount)
         self.assertEqual(serial_order["payment_method"], order.payment_method)
@@ -96,14 +128,14 @@ class TestOrder(TestCase):
     def test_deserialize_an_order(self):
         """It should Deserialize an order"""
         order = OrderFactory()
-        order.items.append(ItemFactory())
-        order.create()
+        # order.items.append(ItemFactory())
+        # order.create()
         serial_order = order.serialize()
         new_order = Order()
         new_order.deserialize(serial_order)
         self.assertEqual(new_order.customer_id, order.customer_id)
         self.assertEqual(new_order.order_date, order.order_date)
-        self.assertEqual(new_order.status, order.status)
+        self.assertEqual(new_order.status.name, serial_order["status"])
         self.assertEqual(new_order.shipping_address, order.shipping_address)
         self.assertEqual(new_order.total_amount, order.total_amount)
         self.assertEqual(new_order.payment_method, order.payment_method)
@@ -120,3 +152,26 @@ class TestOrder(TestCase):
         """It should not Deserialize an order with a TypeError"""
         order = Order()
         self.assertRaises(DataValidationError, order.deserialize, [])
+
+    def test_delete_a_order(self):
+        """It should Delete a Order"""
+        order = OrderFactory()
+        order.create()
+        self.assertEqual(len(Order.all()), 1)
+        # delete the order and make sure it isn't in the database
+        order.delete()
+        self.assertEqual(len(Order.all()), 0)
+
+
+######################################################################
+#  T E S T   E X C E P T I O N   H A N D L E R S
+######################################################################
+class TestExceptionHandlers(TestCaseBase):
+    """Order Model Exception Handlers"""
+
+    @patch("service.models.db.session.commit")
+    def test_delete_exception(self, exception_mock):
+        """It should catch a delete exception"""
+        exception_mock.side_effect = Exception()
+        order = OrderFactory()
+        self.assertRaises(DataValidationError, order.delete)

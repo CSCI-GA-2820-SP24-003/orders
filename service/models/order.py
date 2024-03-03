@@ -68,11 +68,15 @@ class Order(db.Model, PersistentBase):
 
     def serialize(self):
         """Converts an Order into a dictionary"""
+        status_value = (
+            self.status if isinstance(self.status, str) else self.status.value
+        )
+
         order = {
             "id": self.id,
             "customer_id": self.customer_id,
             "order_date": self.order_date.isoformat(),
-            "status": self.status,
+            "status": status_value,
             "shipping_address": self.shipping_address,
             "total_amount": self.total_amount,
             "payment_method": self.payment_method,
@@ -95,7 +99,7 @@ class Order(db.Model, PersistentBase):
         try:
             self.customer_id = data["customer_id"]
             self.order_date = date.fromisoformat(data["order_date"])
-            self.status = data["status"]
+            self.status = OrderStatus(data["status"])
             self.shipping_address = data["shipping_address"]
             self.total_amount = data["total_amount"]
             self.payment_method = data["payment_method"]

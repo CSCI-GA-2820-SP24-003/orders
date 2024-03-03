@@ -64,10 +64,10 @@ class TestOrderService(TestCase):
             orders.append(test_order)
         return orders
 
-    ######################################################################
-    #  P L A C E   T E S T   C A S E S   H E R E
-    ######################################################################
 
+######################################################################
+#  P L A C E   T E S T   C A S E S   H E R E
+######################################################################
     def test_index(self):
         """It should call the home page"""
         resp = self.client.get("/")
@@ -82,3 +82,36 @@ class TestOrderService(TestCase):
         # make sure they are deleted
         response = self.client.get(f"{BASE_URL}/{test_order.id}")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_list_orders(self):
+        """It should list all orders"""
+        sample_orders = [OrderFactory() for _ in range(5)]
+        for order in sample_orders:
+            order.create()
+
+        # Make a GET request to the /orders endpoint
+        response = self.client.get("/orders")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Load the response data
+        data = response.get_json()
+
+        # Check that we got a list of orders
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), len(sample_orders))
+
+        # Check that the data in the response matches what we put in the database
+        for order_data in data:
+            # Assuming your OrderFactory sets a unique customer_id for each order
+            order = next(
+                (
+                    o
+                    for o in sample_orders
+                    if o.customer_id == order_data["customer_id"]
+                ),
+                None,
+            )
+            self.assertIsNotNone(order)
+            self.assertEqual(order_data["customer_id"], order.customer_id)
+            # Add more assertions here to check other fields if necessary
+

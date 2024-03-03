@@ -68,6 +68,10 @@ class Order(db.Model, PersistentBase):
 
     def serialize(self):
         """Converts an Order into a dictionary"""
+        status_value = (
+            self.status if isinstance(self.status, str) else self.status.value
+        )
+
         order = {
             "id": self.id,
             "customer_id": self.customer_id,

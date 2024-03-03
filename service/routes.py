@@ -22,6 +22,7 @@ This service implements a REST API that allows you to manage Orders for a financ
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
+
 from service.models import Order
 from service.common import status  # HTTP Status Codes
 
@@ -109,6 +110,23 @@ def delete_orders(order_id):
 
     app.logger.info("Order with ID: %d delete complete.", order_id)
     return "", status.HTTP_204_NO_CONTENT
+
+  
+######################################################################
+# LIST ALL ORDERS
+######################################################################
+@app.route("/orders", methods=["GET"])
+def list_orders():
+    """Returns all of the Orders"""
+    app.logger.info("Request for Order list")
+    orders = []
+
+    orders = Order.all()
+
+    # Return as an array of dictionaries
+    results = [order.serialize() for order in orders]
+
+    return jsonify(results), status.HTTP_200_OK
 
 
 ######################################################################

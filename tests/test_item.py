@@ -23,7 +23,7 @@ import os
 from unittest import TestCase
 from wsgi import app
 from service.models import Order, Item, DataValidationError, db
-from tests.factories import ItemFactory
+from tests.factories import ItemFactory, OrderFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
@@ -100,3 +100,26 @@ class TestItem(TestCase):
         """It should not Deserialize an item with a TypeError"""
         item = Item()
         self.assertRaises(DataValidationError, item.deserialize, [])
+
+    def test_delete_order_address(self):
+        """It should Delete an order's items"""
+        orders = Order.all()
+        self.assertEqual(orders, [])
+
+        order = OrderFactory()
+        item = ItemFactory(order=order)
+        order.create()
+        # Assert that it was assigned an id and shows up in the database
+        self.assertIsNotNone(order.id)
+        orders = Order.all()
+        self.assertEqual(len(orders), 1)
+
+        # Fetch it back
+        order = Order.find(order.id)
+        item = order.items[0]
+        item.delete()
+        order.update()
+
+        # Fetch it back again
+        order = Order.find(order.id)
+        self.assertEqual(len(order.items), 0)

@@ -22,7 +22,7 @@ This service implements a REST API that allows you to manage Orders for a financ
 
 from flask import jsonify
 
-# , request, url_for, abort
+from flask import request, url_for, abort
 from flask import current_app as app  # Import Flask application
 
 from service.models import Order
@@ -51,7 +51,6 @@ def index():
 ######################################################################
 
 
-# Todo: Place your REST API code here ...
 ######################################################################
 # LIST ALL ORDERS
 ######################################################################
@@ -67,3 +66,52 @@ def list_orders():
     results = [order.serialize() for order in orders]
 
     return jsonify(results), status.HTTP_200_OK
+
+
+
+######################################################################
+# CREATE A NEW ACCOUNT
+######################################################################
+@app.route("/orders", methods=["POST"])
+def create_orders():
+    """
+    Creates an Order
+    This endpoint will create an Order based the data in the body that is posted
+    """
+    app.logger.info("Request to create an Order")
+    check_content_type("application/json")
+
+    # Create the order
+    order = Order()
+    order.deserialize(request.get_json())
+    order.create()
+
+    # Create a message to return
+    message = order.serialize()
+    location_url = url_for("get_orders", order_id=order.id, _external=True)
+
+    return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+
+# Todo: Place your REST API code here ...
+
+######################################################################
+#  U T I L I T Y   F U N C T I O N S
+######################################################################
+
+
+def check_content_type(content_type):
+    """Checks that the media type is correct"""
+    if "Content-Type" not in request.headers:
+        app.logger.error("No Content-Type specified.")
+        abort(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            f"Content-Type must be {content_type}",
+        )
+
+    if request.headers["Content-Type"] == content_type:
+        return
+
+    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
+    )

@@ -21,6 +21,7 @@ from datetime import date
 import factory
 from factory.fuzzy import FuzzyChoice, FuzzyDate, FuzzyDecimal, FuzzyInteger
 from service.models import Order, Item
+from service.models.order import OrderStatus
 
 
 class OrderFactory(factory.Factory):
@@ -35,7 +36,7 @@ class OrderFactory(factory.Factory):
     id = factory.Sequence(lambda n: n)
     customer_id = None
     order_date = FuzzyDate(date(2008, 1, 1))
-    status = FuzzyChoice(choices=["STARTED", "PACKING", "SHIPPING"])
+    status = FuzzyChoice(choices=[OrderStatus.STARTED, OrderStatus.PACKING, OrderStatus.SHIPPING])
     shipping_address = factory.Faker("address")
     total_amount = FuzzyDecimal(0.5, 9999.99)
     payment_method = FuzzyChoice(choices=["CREDIT", "DEBIT", "COD"])

@@ -53,7 +53,7 @@ class Order(db.Model, PersistentBase):
     customer_id = db.Column(db.Integer)
     order_date = db.Column(db.Date(), nullable=False, default=date.today())
     status = db.Column(
-        db.Enum(OrderStatus), nullable=False, default=OrderStatus.STARTED
+        db.Enum(OrderStatus), nullable=False, server_default=(OrderStatus.STARTED.name)
     )
     shipping_address = db.Column(db.String(256))
     total_amount = db.Column(db.Double)
@@ -76,7 +76,7 @@ class Order(db.Model, PersistentBase):
             "id": self.id,
             "customer_id": self.customer_id,
             "order_date": self.order_date.isoformat(),
-            "status": status_value,
+            "status": self.status.name,
             "shipping_address": self.shipping_address,
             "total_amount": self.total_amount,
             "payment_method": self.payment_method,
@@ -99,7 +99,7 @@ class Order(db.Model, PersistentBase):
         try:
             self.customer_id = data["customer_id"]
             self.order_date = date.fromisoformat(data["order_date"])
-            self.status = OrderStatus(data["status"])
+            self.status = getattr(OrderStatus, data["status"])
             self.shipping_address = data["shipping_address"]
             self.total_amount = data["total_amount"]
             self.payment_method = data["payment_method"]

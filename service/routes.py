@@ -137,7 +137,7 @@ def create_orders():
 ######################################################################
 
 
-@app.route("/orders/<int:order_id>/items", methods=["POST"])
+@app.route("/orders/<int:order_id>/add-item", methods=["POST"])
 def add_item(order_id):
     """
     Creates an item and adds item to an order
@@ -152,20 +152,22 @@ def add_item(order_id):
     if not order:
         abort(
             status.HTTP_404_NOT_FOUND,
-            f"Order with id '{order_id}' could not be found.",
+            f"Order with id '{order_id}' was not be found",
         )
 
     # Create an item from the json data
     item = Item()
     item.deserialize(request.get_json())
+    item.order_id = order_id
 
     order.items.append(item)
     order.update()
+    item.update()
 
-    location_url = url_for("add_items", order_id=order.id, _external=True)
-
+    location_url = url_for("add_item", order_id=order.id, item_id=item.id, _external=True)
+    app.logger.info("Item with id %s created for order with %s", item.id, order.id)
     return (
-        jsonify(order.serialize()),
+        jsonify(item.serialize()),
         status.HTTP_201_CREATED,
         {"Location": location_url},
     )

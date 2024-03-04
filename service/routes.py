@@ -67,31 +67,8 @@ def get_orders(order_id):
     if not order:
         error(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
 
-    app.logger.info("Returning order: %s", order.name)
+    app.logger.info("Returning order: %s", order.id)
     return jsonify(order.serialize()), status.HTTP_200_OK
-
-
-######################################################################
-# CREATE A NEW ORDER
-######################################################################
-@app.route("/orders", methods=["POST"])
-def create_orders():
-    """
-    Creates a Order
-
-    This endpoint will create a Order based the data in the body that is posted
-    """
-    app.logger.info("Request to create a order")
-    check_content_type("application/json")
-
-    order = Order()
-    order.deserialize(request.get_json())
-    order.create()
-    message = order.serialize()
-    location_url = url_for("get_orders", order_id=order.id, _external=True)
-
-    app.logger.info("Order with ID: %d created.", order.id)
-    return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
 
 ######################################################################
@@ -133,7 +110,7 @@ def list_orders():
 
 
 ######################################################################
-# CREATE A NEW ACCOUNT
+# CREATE A NEW ORDER
 ######################################################################
 @app.route("/orders", methods=["POST"])
 def create_orders():
@@ -178,3 +155,12 @@ def check_content_type(content_type):
     abort(
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
     )
+
+
+######################################################################
+# Logs error messages before aborting
+######################################################################
+def error(status_code, reason):
+    """Logs the error and then aborts"""
+    app.logger.error(reason)
+    abort(status_code, reason)

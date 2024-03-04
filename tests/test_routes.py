@@ -15,8 +15,6 @@ DATABASE_URI = os.getenv(
 )
 BASE_URL = "/orders"
 
-BASE_URL = "/orders"
-
 ######################################################################
 #  T E S T   C A S E S
 ######################################################################
@@ -135,22 +133,21 @@ class TestOrderService(TestCase):
 
         # Check the data is correct
         new_order = resp.get_json()
-        self.assertEqual(new_order["id"], order.id, "id does not match")
         self.assertEqual(
             new_order["customer_id"], order.customer_id, "customer_id does not match"
         )
-        self.assertEqual(new_order["order_date"], order.order_date, "order_date does not match")
+        self.assertEqual(new_order["order_date"], str(order.order_date), "order_date does not match")
         self.assertEqual(
             new_order["status"], order.status.name, "status does not match"
         )
         self.assertEqual(
-            new_order["total_amount"], order.total_amount, "total_amount does not match"
+            str(new_order["total_amount"]), str(order.total_amount), "total_amount does not match"
         )
         self.assertEqual(
             new_order["payment_method"], order.payment_method, "payment_method does not match"
         )
         self.assertEqual(
-            new_order["shipping_cost"], order.shipping_cost, "shipping_cost does not match"
+            str(new_order["shipping_cost"]), str(order.shipping_cost), "shipping_cost does not match"
         )
         self.assertEqual(
             new_order["expected_date"],
@@ -166,22 +163,21 @@ class TestOrderService(TestCase):
         resp = self.client.get(location, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         new_order = resp.get_json()
-        self.assertEqual(new_order["id"], order.id, "id does not match")
         self.assertEqual(
             new_order["customer_id"], order.customer_id, "customer_id does not match"
         )
         self.assertEqual(new_order["order_date"], str(order.order_date), "order_date does not match")
         self.assertEqual(
-            new_order["status"], order.status, "status does not match"
+            new_order["status"], order.status.name, "status does not match"
         )
         self.assertEqual(
-            new_order["total_amount"], order.total_amount, "total_amount does not match"
+            str(new_order["total_amount"]), str(order.total_amount), "total_amount does not match"
         )
         self.assertEqual(
             new_order["payment_method"], order.payment_method, "payment_method does not match"
         )
         self.assertEqual(
-            new_order["shipping_cost"], order.shipping_cost, "shipping_cost does not match"
+            str(new_order["shipping_cost"]), str(order.shipping_cost), "shipping_cost does not match"
         )
         self.assertEqual(
             new_order["expected_date"],

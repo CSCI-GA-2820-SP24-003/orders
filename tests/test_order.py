@@ -161,6 +161,53 @@ class TestOrder(TestCase):
         # delete the order and make sure it isn't in the database
         order.delete()
         self.assertEqual(len(Order.all()), 0)
+    
+    def test_create_an_order(self):
+        """It should Create an Order and assert that it exists"""
+        fake_order = OrderFactory()
+        # pylint: disable=unexpected-keyword-arg
+        order = Order(
+            id = fake_order.id,
+            customer_id = fake_order.customer_id,
+            order_date = fake_order.order_date,
+            status = fake_order.status,
+            shipping_address = fake_order.shipping_address,
+            total_amount = fake_order.total_amount,
+            payment_method = fake_order.payment_method,
+            shipping_cost = fake_order.shipping_cost,
+            expected_date = fake_order.expected_date,
+            order_notes = fake_order.order_notes
+        )
+        self.assertIsNotNone(order)
+        self.assertEqual(order.id, fake_order.id)
+        self.assertEqual(order.customer_id, fake_order.customer_id)
+        self.assertEqual(order.order_date, fake_order.order_date)
+        self.assertEqual(order.status, fake_order.status)
+        self.assertEqual(order.shipping_address, fake_order.shipping_address)
+        self.assertEqual(order.total_amount, fake_order.total_amount)
+        self.assertEqual(order.payment_method, fake_order.payment_method)
+        self.assertEqual(order.shipping_cost, fake_order.shipping_cost)
+        self.assertEqual(order.expected_date, fake_order.expected_date)
+        self.assertEqual(order.order_notes, fake_order.order_notes)
+
+
+    def test_add_an_order(self):
+        """It should Create an order and add it to the database"""
+        orders = Order.all()
+        self.assertEqual(orders, [])
+        order = OrderFactory()
+        order.create()
+        # Assert that it was assigned an id and shows up in the database
+        self.assertIsNotNone(order.id)
+        orders = Order.all()
+        self.assertEqual(len(orders), 1)
+
+    @patch("service.models.db.session.commit")
+    def test_add_order_failed(self, exception_mock):
+        """It should not create an Order on database error"""
+        exception_mock.side_effect = Exception()
+        order = OrderFactory()
+        self.assertRaises(DataValidationError, order.create)
 
 
 ######################################################################

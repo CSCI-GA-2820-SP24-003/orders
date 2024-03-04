@@ -161,22 +161,22 @@ class TestOrder(TestCase):
         # delete the order and make sure it isn't in the database
         order.delete()
         self.assertEqual(len(Order.all()), 0)
-    
+
     def test_create_an_order(self):
         """It should Create an Order and assert that it exists"""
         fake_order = OrderFactory()
         # pylint: disable=unexpected-keyword-arg
         order = Order(
-            id = fake_order.id,
-            customer_id = fake_order.customer_id,
-            order_date = fake_order.order_date,
-            status = fake_order.status,
-            shipping_address = fake_order.shipping_address,
-            total_amount = fake_order.total_amount,
-            payment_method = fake_order.payment_method,
-            shipping_cost = fake_order.shipping_cost,
-            expected_date = fake_order.expected_date,
-            order_notes = fake_order.order_notes
+            id=fake_order.id,
+            customer_id=fake_order.customer_id,
+            order_date=fake_order.order_date,
+            status=fake_order.status,
+            shipping_address=fake_order.shipping_address,
+            total_amount=fake_order.total_amount,
+            payment_method=fake_order.payment_method,
+            shipping_cost=fake_order.shipping_cost,
+            expected_date=fake_order.expected_date,
+            order_notes=fake_order.order_notes,
         )
         self.assertIsNotNone(order)
         self.assertEqual(order.id, fake_order.id)
@@ -189,7 +189,6 @@ class TestOrder(TestCase):
         self.assertEqual(order.shipping_cost, fake_order.shipping_cost)
         self.assertEqual(order.expected_date, fake_order.expected_date)
         self.assertEqual(order.order_notes, fake_order.order_notes)
-
 
     def test_add_an_order(self):
         """It should Create an order and add it to the database"""
@@ -228,16 +227,16 @@ class TestExceptionHandlers(TestCaseBase):
         fake_order = OrderFactory()
         # pylint: disable=unexpected-keyword-arg
         order = Order(
-            id = fake_order.id,
-            customer_id = fake_order.customer_id,
-            order_date = fake_order.order_date,
-            status = fake_order.status,
-            shipping_address = fake_order.shipping_address,
-            total_amount = fake_order.total_amount,
-            payment_method = fake_order.payment_method,
-            shipping_cost = fake_order.shipping_cost,
-            expected_date = fake_order.expected_date,
-            order_notes = fake_order.order_notes
+            id=fake_order.id,
+            customer_id=fake_order.customer_id,
+            order_date=fake_order.order_date,
+            status=fake_order.status,
+            shipping_address=fake_order.shipping_address,
+            total_amount=fake_order.total_amount,
+            payment_method=fake_order.payment_method,
+            shipping_cost=fake_order.shipping_cost,
+            expected_date=fake_order.expected_date,
+            order_notes=fake_order.order_notes,
         )
         self.assertIsNotNone(order)
         self.assertEqual(order.id, fake_order.id)
@@ -250,7 +249,6 @@ class TestExceptionHandlers(TestCaseBase):
         self.assertEqual(order.shipping_cost, fake_order.shipping_cost)
         self.assertEqual(order.expected_date, fake_order.expected_date)
         self.assertEqual(order.order_notes, fake_order.order_notes)
-
 
     def test_add_an_order(self):
         """It should Create an order and add it to the database"""

@@ -90,7 +90,7 @@ def delete_orders(order_id):
     app.logger.info("Order with ID: %d delete complete.", order_id)
     return "", status.HTTP_204_NO_CONTENT
 
-  
+
 ######################################################################
 # LIST ALL ORDERS
 ######################################################################
@@ -106,7 +106,6 @@ def list_orders():
     results = [order.serialize() for order in orders]
 
     return jsonify(results), status.HTTP_200_OK
-
 
 
 ######################################################################
@@ -131,6 +130,7 @@ def create_orders():
     location_url = url_for("get_orders", order_id=order.id, _external=True)
 
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+
 
 # Todo: Place your REST API code here ...
 

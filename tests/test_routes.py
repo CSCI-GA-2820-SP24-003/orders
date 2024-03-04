@@ -15,6 +15,7 @@ DATABASE_URI = os.getenv(
 )
 BASE_URL = "/orders"
 
+
 ######################################################################
 #  T E S T   C A S E S
 ######################################################################
@@ -66,7 +67,6 @@ class TestOrderService(TestCase):
             order.id = new_order["id"]
             orders.append(order)
         return orders
-
 
     ######################################################################
     #  P L A C E   T E S T   C A S E S   H E R E
@@ -136,18 +136,26 @@ class TestOrderService(TestCase):
         self.assertEqual(
             new_order["customer_id"], order.customer_id, "customer_id does not match"
         )
-        self.assertEqual(new_order["order_date"], str(order.order_date), "order_date does not match")
+        self.assertEqual(
+            new_order["order_date"], str(order.order_date), "order_date does not match"
+        )
         self.assertEqual(
             new_order["status"], order.status.name, "status does not match"
         )
         self.assertEqual(
-            str(new_order["total_amount"]), str(order.total_amount), "total_amount does not match"
+            str(new_order["total_amount"]),
+            str(order.total_amount),
+            "total_amount does not match",
         )
         self.assertEqual(
-            new_order["payment_method"], order.payment_method, "payment_method does not match"
+            new_order["payment_method"],
+            order.payment_method,
+            "payment_method does not match",
         )
         self.assertEqual(
-            str(new_order["shipping_cost"]), str(order.shipping_cost), "shipping_cost does not match"
+            str(new_order["shipping_cost"]),
+            str(order.shipping_cost),
+            "shipping_cost does not match",
         )
         self.assertEqual(
             new_order["expected_date"],
@@ -157,7 +165,6 @@ class TestOrderService(TestCase):
         self.assertEqual(
             new_order["order_notes"], order.order_notes, "order_notes does not match"
         )
-        
 
         # Check that the location header was correct by getting it
         resp = self.client.get(location, content_type="application/json")
@@ -166,18 +173,26 @@ class TestOrderService(TestCase):
         self.assertEqual(
             new_order["customer_id"], order.customer_id, "customer_id does not match"
         )
-        self.assertEqual(new_order["order_date"], str(order.order_date), "order_date does not match")
+        self.assertEqual(
+            new_order["order_date"], str(order.order_date), "order_date does not match"
+        )
         self.assertEqual(
             new_order["status"], order.status.name, "status does not match"
         )
         self.assertEqual(
-            str(new_order["total_amount"]), str(order.total_amount), "total_amount does not match"
+            str(new_order["total_amount"]),
+            str(order.total_amount),
+            "total_amount does not match",
         )
         self.assertEqual(
-            new_order["payment_method"], order.payment_method, "payment_method does not match"
+            new_order["payment_method"],
+            order.payment_method,
+            "payment_method does not match",
         )
         self.assertEqual(
-            str(new_order["shipping_cost"]), str(order.shipping_cost), "shipping_cost does not match"
+            str(new_order["shipping_cost"]),
+            str(order.shipping_cost),
+            "shipping_cost does not match",
         )
         self.assertEqual(
             new_order["expected_date"],
@@ -187,5 +202,5 @@ class TestOrderService(TestCase):
         self.assertEqual(
             new_order["order_notes"], order.order_notes, "order_notes does not match"
         )
-    
+
     # Todo: Add your test cases here...

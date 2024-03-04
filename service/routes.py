@@ -20,7 +20,9 @@ Orders Service
 This service implements a REST API that allows you to manage Orders for a financial service.
 """
 
-from flask import jsonify, request, url_for, abort
+from flask import jsonify
+
+from flask import request, url_for, abort
 from flask import current_app as app  # Import Flask application
 
 from service.models import Order
@@ -65,31 +67,8 @@ def get_orders(order_id):
     if not order:
         error(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
 
-    app.logger.info("Returning order: %s", order.name)
+    app.logger.info("Returning order: %s", order.id)
     return jsonify(order.serialize()), status.HTTP_200_OK
-
-
-######################################################################
-# CREATE A NEW ORDER
-######################################################################
-@app.route("/orders", methods=["POST"])
-def create_orders():
-    """
-    Creates a Order
-
-    This endpoint will create a Order based the data in the body that is posted
-    """
-    app.logger.info("Request to create a order")
-    check_content_type("application/json")
-
-    order = Order()
-    order.deserialize(request.get_json())
-    order.create()
-    message = order.serialize()
-    location_url = url_for("get_orders", order_id=order.id, _external=True)
-
-    app.logger.info("Order with ID: %d created.", order.id)
-    return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
 
 ######################################################################
@@ -111,7 +90,7 @@ def delete_orders(order_id):
     app.logger.info("Order with ID: %d delete complete.", order_id)
     return "", status.HTTP_204_NO_CONTENT
 
-  
+
 ######################################################################
 # LIST ALL ORDERS
 ######################################################################
@@ -130,18 +109,41 @@ def list_orders():
 
 
 ######################################################################
+# CREATE A NEW ORDER
+######################################################################
+@app.route("/orders", methods=["POST"])
+def create_orders():
+    """
+    Creates an Order
+    This endpoint will create an Order based the data in the body that is posted
+    """
+    app.logger.info("Request to create an Order")
+    check_content_type("application/json")
+
+    # Create the order
+    order = Order()
+    order.deserialize(request.get_json())
+    order.create()
+
+    # Create a message to return
+    message = order.serialize()
+    location_url = url_for("get_orders", order_id=order.id, _external=True)
+
+    return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+
+
+# Todo: Place your REST API code here ...
+
+######################################################################
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
 
 
-######################################################################
-# Checks the ContentType of a request
-######################################################################
 def check_content_type(content_type):
     """Checks that the media type is correct"""
     if "Content-Type" not in request.headers:
         app.logger.error("No Content-Type specified.")
-        error(
+        abort(
             status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             f"Content-Type must be {content_type}",
         )
@@ -150,9 +152,8 @@ def check_content_type(content_type):
         return
 
     app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
-    error(
-        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-        f"Content-Type must be {content_type}",
+    abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
     )
 
 

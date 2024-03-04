@@ -48,26 +48,30 @@ class TestOrderService(TestCase):
         """This runs after each test"""
         db.session.remove()
 
+    ######################################################################
+    #  H E L P E R   M E T H O D S
+    ######################################################################
+
     def _create_orders(self, count):
         """Factory method to create orders in bulk"""
         orders = []
         for _ in range(count):
-            test_order = OrderFactory()
-            response = self.client.post(BASE_URL, json=test_order.serialize())
+            order = OrderFactory()
+            resp = self.client.post(BASE_URL, json=order.serialize())
             self.assertEqual(
-                response.status_code,
+                resp.status_code,
                 status.HTTP_201_CREATED,
-                "Could not create test order",
+                "Could not create test Order",
             )
-            new_order = response.get_json()
-            test_order.id = new_order["id"]
-            orders.append(test_order)
+            new_order = resp.get_json()
+            order.id = new_order["id"]
+            orders.append(order)
         return orders
 
+    ######################################################################
+    #  P L A C E   T E S T   C A S E S   H E R E
+    ######################################################################
 
-######################################################################
-#  P L A C E   T E S T   C A S E S   H E R E
-######################################################################
     def test_index(self):
         """It should call the home page"""
         resp = self.client.get("/")
@@ -115,3 +119,88 @@ class TestOrderService(TestCase):
             self.assertEqual(order_data["customer_id"], order.customer_id)
             # Add more assertions here to check other fields if necessary
 
+    def test_create_order(self):
+        """It should Create a new Order"""
+        order = OrderFactory()
+        resp = self.client.post(
+            BASE_URL, json=order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = resp.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        # Check the data is correct
+        new_order = resp.get_json()
+        self.assertEqual(
+            new_order["customer_id"], order.customer_id, "customer_id does not match"
+        )
+        self.assertEqual(
+            new_order["order_date"], str(order.order_date), "order_date does not match"
+        )
+        self.assertEqual(
+            new_order["status"], order.status.name, "status does not match"
+        )
+        self.assertEqual(
+            str(new_order["total_amount"]),
+            str(order.total_amount),
+            "total_amount does not match",
+        )
+        self.assertEqual(
+            new_order["payment_method"],
+            order.payment_method,
+            "payment_method does not match",
+        )
+        self.assertEqual(
+            str(new_order["shipping_cost"]),
+            str(order.shipping_cost),
+            "shipping_cost does not match",
+        )
+        self.assertEqual(
+            new_order["expected_date"],
+            str(order.expected_date),
+            "expected_date does not match",
+        )
+        self.assertEqual(
+            new_order["order_notes"], order.order_notes, "order_notes does not match"
+        )
+
+        # Check that the location header was correct by getting it
+        resp = self.client.get(location, content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        new_order = resp.get_json()
+        self.assertEqual(
+            new_order["customer_id"], order.customer_id, "customer_id does not match"
+        )
+        self.assertEqual(
+            new_order["order_date"], str(order.order_date), "order_date does not match"
+        )
+        self.assertEqual(
+            new_order["status"], order.status.name, "status does not match"
+        )
+        self.assertEqual(
+            str(new_order["total_amount"]),
+            str(order.total_amount),
+            "total_amount does not match",
+        )
+        self.assertEqual(
+            new_order["payment_method"],
+            order.payment_method,
+            "payment_method does not match",
+        )
+        self.assertEqual(
+            str(new_order["shipping_cost"]),
+            str(order.shipping_cost),
+            "shipping_cost does not match",
+        )
+        self.assertEqual(
+            new_order["expected_date"],
+            str(order.expected_date),
+            "expected_date does not match",
+        )
+        self.assertEqual(
+            new_order["order_notes"], order.order_notes, "order_notes does not match"
+        )
+
+    # Todo: Add your test cases here...

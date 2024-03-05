@@ -40,7 +40,7 @@ def index():
             name="Orders REST API Service",
             version="1.0",
             # Todo: Uncomment the next line when GET /orders is implemented
-            # paths=url_for("list_orders", _external=True),
+            paths=url_for("list_orders", _external=True),
         ),
         status.HTTP_200_OK,
     )
@@ -133,6 +133,51 @@ def create_orders():
 
 
 ######################################################################
+# GET A SINGLE ITEM IN AN ORDER
+######################################################################
+
+
+@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["GET"])
+def get_items(order_id, item_id):
+    """
+    Get an Item
+
+    This endpoint returns just an item
+    """
+    app.logger.info("Request to retrieve Item %s for Order id: %s", (item_id, order_id))
+
+    # See if the item exists and abort if it doesn't
+    item = Item.find(item_id)
+    if not item:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{item_id}' could not be found.",
+        )
+
+    return jsonify(item.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# DELETE AN AN ITEM FROM AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["DELETE"])
+def delete_items(order_id, item_id):
+    """
+    Delete an Item
+
+    This endpoint will delete an Item based the id specified in the path
+    """
+    app.logger.info("Request to delete Item %s for Order id: %s", (item_id, order_id))
+
+    # See if the item exists and delete it if it does
+    item = Item.find(item_id)
+    if item:
+        item.delete()
+
+    return "", status.HTTP_204_NO_CONTENT
+
+
+######################################################################
 # ADD AN ITEM TO AN ORDER
 ######################################################################
 
@@ -164,13 +209,16 @@ def add_item(order_id):
     order.update()
     item.update()
 
-    location_url = url_for("add_item", order_id=order.id, item_id=item.id, _external=True)
+    location_url = url_for(
+        "add_item", order_id=order.id, item_id=item.id, _external=True
+    )
     app.logger.info("Item with id %s created for order with %s", item.id, order.id)
     return (
         jsonify(item.serialize()),
         status.HTTP_201_CREATED,
         {"Location": location_url},
     )
+
 
 ######################################################################
 # LIST ITEMS

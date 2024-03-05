@@ -101,6 +101,29 @@ class TestItem(TestCase):
         item = Item()
         self.assertRaises(DataValidationError, item.deserialize, [])
 
+    def test_delete_order_item(self):
+        """It should Delete an order's items"""
+        orders = Order.all()
+        self.assertEqual(orders, [])
+
+        order = OrderFactory()
+        item = ItemFactory(order=order)
+        order.create()
+        # Assert that it was assigned an id and shows up in the database
+        self.assertIsNotNone(order.id)
+        orders = Order.all()
+        self.assertEqual(len(orders), 1)
+
+        # Fetch it back
+        order = Order.find(order.id)
+        item = order.items[0]
+        item.delete()
+        order.update()
+
+        # Fetch it back again
+        order = Order.find(order.id)
+        self.assertEqual(len(order.items), 0)
+
     def test_add_an_item(self):
         """It should create an item and add it to the database"""
         items = Item.all()

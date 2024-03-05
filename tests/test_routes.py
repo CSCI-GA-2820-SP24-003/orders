@@ -143,8 +143,8 @@ class TestOrderService(TestCase):
             new_order["status"], order.status.name, "status does not match"
         )
         self.assertEqual(
-            str(new_order["total_amount"]),
-            str(order.total_amount),
+            float(new_order["total_amount"]),
+            float(order.total_amount),
             "total_amount does not match",
         )
         self.assertEqual(
@@ -153,8 +153,8 @@ class TestOrderService(TestCase):
             "payment_method does not match",
         )
         self.assertEqual(
-            str(new_order["shipping_cost"]),
-            str(order.shipping_cost),
+            float(new_order["shipping_cost"]),
+            float(order.shipping_cost),
             "shipping_cost does not match",
         )
         self.assertEqual(
@@ -180,8 +180,8 @@ class TestOrderService(TestCase):
             new_order["status"], order.status.name, "status does not match"
         )
         self.assertEqual(
-            str(new_order["total_amount"]),
-            str(order.total_amount),
+            float(new_order["total_amount"]),
+            float(order.total_amount),
             "total_amount does not match",
         )
         self.assertEqual(
@@ -190,8 +190,8 @@ class TestOrderService(TestCase):
             "payment_method does not match",
         )
         self.assertEqual(
-            str(new_order["shipping_cost"]),
-            str(order.shipping_cost),
+            float(new_order["shipping_cost"]),
+            float(order.shipping_cost),
             "shipping_cost does not match",
         )
         self.assertEqual(
@@ -255,5 +255,33 @@ class TestOrderService(TestCase):
 
         data = resp.get_json()
         self.assertEqual(len(data), 2)
+
+    def test_delete_item(self):
+        """It should Delete an Item"""
+        order = self._create_orders(1)[0]
+        item = ItemFactory()
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items",
+            json=item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        data = resp.get_json()
+        logging.debug(data)
+        item_id = data["id"]
+
+        # send delete request
+        resp = self.client.delete(
+            f"{BASE_URL}/{order.id}/items/{item_id}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+        # retrieve it back and make sure item is not there
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}/items/{item_id}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     # Todo: Add your test cases here...

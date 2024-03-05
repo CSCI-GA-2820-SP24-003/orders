@@ -23,7 +23,7 @@ import os
 from unittest import TestCase
 from wsgi import app
 from service.models import Order, Item, DataValidationError, db
-from tests.factories import ItemFactory
+from tests.factories import ItemFactory, OrderFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
@@ -110,3 +110,16 @@ class TestItem(TestCase):
         self.assertIsNotNone(item.id)
         items = Item.all()
         self.assertEqual(len(items), 1)
+
+    def test_list_order_items(self):
+        """It should list all items in an order"""
+        self.assertEqual(Order.all(), [])
+        order = OrderFactory()
+        order.create()
+        self.assertEqual(len(Order.all()), 1)
+        for _ in range(10):
+            item = ItemFactory(order=order)
+            item.create()
+        self.assertEqual(len(Item.all()), 10)
+        for item in Item.all():
+            self.assertEqual(item.order.id, order.id)

@@ -255,8 +255,34 @@ class TestOrderService(TestCase):
 
         # If the item does not exist
         self.assertEqual(
-            response.status_code, status.HTTP_400_BAD_REQUEST
+            response.status_code, status.HTTP_404_NOT_FOUND
         )
         print('here 3')
 
-    # Todo: Add your test cases here...
+    def test_add_item(self):
+        """It should add an item to a valid order id"""
+        # if given valid order id, item should be created and added to the order
+        test_order = self._create_orders(1)[0]
+        test_item = ItemFactory()
+        response = self.client.post(
+            f"{BASE_URL}/{test_order.id}/items",
+            json=test_item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = response.get_json()
+        self.assertIsNotNone(data["id"])
+        self.assertEqual(data["order_id"], test_order.id)
+        self.assertEqual(data["product_id"], test_item.product_id)
+        self.assertEqual(data["quantity"], test_item.quantity)
+        self.assertEqual(data["unit_price"], float(test_item.unit_price))
+
+        # order id is not found
+        sad_path_order_id = -1
+        sad_path_test_item = ItemFactory()
+        response = self.client.post(
+            f"{BASE_URL}/{sad_path_order_id}/items",
+            json=sad_path_test_item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

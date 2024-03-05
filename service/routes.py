@@ -50,47 +50,6 @@ def index():
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
 
-
-######################################################################
-# ADD AN ITEM TO AN ORDER
-######################################################################
-
-
-@app.route("/orders/<int:order_id>/items", methods=["POST"])
-def add_item(order_id):
-    """
-    Creates an item and adds item to an order
-
-    Args:
-        order_id ( integer )
-    """
-    app.logger.info("Adding an item to the order with order_id %s", order_id)
-    check_content_type("application/json")
-
-    order = Order.find(order_id)
-    if not order:
-        abort(
-            status.HTTP_404_NOT_FOUND,
-            f"Order with id '{order_id}' was not be found",
-        )
-
-    # Create an item from the json data
-    item = Item()
-    item.deserialize(request.get_json())
-    item.order_id = order_id
-
-    order.items.append(item)
-    order.update()
-    item.update()
-
-    location_url = url_for("add_item", order_id=order.id, item_id=item.id, _external=True)
-    app.logger.info("Item with id %s created for order with %s", item.id, order.id)
-    return (
-        jsonify(item.serialize()),
-        status.HTTP_201_CREATED,
-        {"Location": location_url},
-    )
-
 ######################################################################
 # READ A ORDER
 ######################################################################
@@ -174,7 +133,46 @@ def create_orders():
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
 
-# Todo: Place your REST API code here ...
+######################################################################
+# ADD AN ITEM TO AN ORDER
+######################################################################
+
+
+@app.route("/orders/<int:order_id>/items", methods=["POST"])
+def add_item(order_id):
+    """
+    Creates an item and adds item to an order
+
+    Args:
+        order_id ( integer )
+    """
+    app.logger.info("Adding an item to the order with order_id %s", order_id)
+    check_content_type("application/json")
+
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' was not be found",
+        )
+
+    # Create an item from the json data
+    item = Item()
+    item.deserialize(request.get_json())
+    item.order_id = order_id
+
+    order.items.append(item)
+    order.update()
+    item.update()
+
+    location_url = url_for("add_item", order_id=order.id, item_id=item.id, _external=True)
+    app.logger.info("Item with id %s created for order with %s", item.id, order.id)
+    return (
+        jsonify(item.serialize()),
+        status.HTTP_201_CREATED,
+        {"Location": location_url},
+    )
+
 
 ######################################################################
 # GET AN ITEM FROM THE ORDER

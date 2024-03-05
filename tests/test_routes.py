@@ -209,7 +209,7 @@ class TestOrderService(TestCase):
         test_order = self._create_orders(1)[0]
         test_item = ItemFactory()
         response = self.client.post(
-            f"{BASE_URL}/{test_order.id}/add-item",
+            f"{BASE_URL}/{test_order.id}/items",
             json=test_item.serialize(),
             content_type="application/json",
         )
@@ -225,7 +225,7 @@ class TestOrderService(TestCase):
         sad_path_order_id = -1 
         sad_path_test_item = ItemFactory()
         response = self.client.post(
-            f"{BASE_URL}/{sad_path_order_id}/add-item",
+            f"{BASE_URL}/{sad_path_order_id}/items",
             json=sad_path_test_item.serialize(),
             content_type="application/json",
         )

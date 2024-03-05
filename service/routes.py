@@ -137,7 +137,7 @@ def create_orders():
 ######################################################################
 
 
-@app.route("/orders/<int:order_id>/add-item", methods=["POST"])
+@app.route("/orders/<int:order_id>/items", methods=["POST"])
 def add_item(order_id):
     """
     Creates an item and adds item to an order

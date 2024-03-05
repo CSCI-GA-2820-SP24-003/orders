@@ -8,7 +8,7 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, Order
-from tests.factories import OrderFactory
+from tests.factories import OrderFactory, ItemFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -67,6 +67,20 @@ class TestOrderService(TestCase):
             order.id = new_order["id"]
             orders.append(order)
         return orders
+    
+    def _create_items_in_existing_order(self, order_id, count):
+        """Factory method to create items in an existing order in bulk"""
+        test_items = []
+        for _ in range(count):
+            test_item = ItemFactory()
+            response = self.client.post(
+                f"/orders/{order_id}/items",
+                json=test_item.serialize(),
+                content_type="application/json",
+            )
+            item = response.get_json()
+            test_items.append(item)
+        return test_items
 
     ######################################################################
     #  P L A C E   T E S T   C A S E S   H E R E
@@ -202,5 +216,47 @@ class TestOrderService(TestCase):
         self.assertEqual(
             new_order["order_notes"], order.order_notes, "order_notes does not match"
         )
+
+    def test_get_item_from_order(self):
+        """
+        It should return the item       
+        """
+        order = self._create_orders(1)[0]
+        print(order)
+        item = self._create_items_in_existing_order(order.id, 3)[0]
+
+        response = self.client.get(
+            f"/orders/{order.id}/items/{item['id']}",
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        print(data)
+        self.assertEqual(data["order_id"], order.id)
+        self.assertEqual(data["id"], item["id"])
+        print('here 1')
+        sad_path_order_id = -1
+        response = self.client.get(
+            f"/orders/{sad_path_order_id}/items/123",
+            content_type="application/json",
+        )
+        # If the order does not exist
+        self.assertEqual(
+            response.status_code, status.HTTP_404_NOT_FOUND
+        )
+        print('here 2')
+        sad_path_item_id = -1
+        print(order.id)
+        response = self.client.get(
+            f"/orders/{order.id}/items/{sad_path_item_id}",
+            content_type="application/json",
+        )
+
+        # If the item does not exist
+        self.assertEqual(
+            response.status_code, status.HTTP_400_BAD_REQUEST
+        )
+        print('here 3')
 
     # Todo: Add your test cases here...

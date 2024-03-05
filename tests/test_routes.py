@@ -222,7 +222,7 @@ class TestOrderService(TestCase):
         self.assertEqual(data["unit_price"], float(test_item.unit_price))
 
         # order id is not found
-        sad_path_order_id = -1 
+        sad_path_order_id = -1
         sad_path_test_item = ItemFactory()
         response = self.client.post(
             f"{BASE_URL}/{sad_path_order_id}/items",

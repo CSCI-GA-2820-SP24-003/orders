@@ -173,6 +173,29 @@ def add_item(order_id):
         {"Location": location_url},
     )
 
+######################################################################
+# LIST ITEMS
+######################################################################
+
+
+@app.route("/orders/<int:order_id>/items", methods=["GET"])
+def list_items(order_id):
+    """Returns all of the Items for an Order"""
+    app.logger.info("Request for all Items for Order with id: %s", order_id)
+
+    # See if the order exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' could not be found.",
+        )
+
+    # Get the items for the account
+    results = [item.serialize() for item in order.items]
+
+    return jsonify(results), status.HTTP_200_OK
+
 
 ######################################################################
 # GET AN ITEM FROM THE ORDER

@@ -100,3 +100,13 @@ class TestItem(TestCase):
         """It should not Deserialize an item with a TypeError"""
         item = Item()
         self.assertRaises(DataValidationError, item.deserialize, [])
+
+    def test_add_an_item(self):
+        """It should create an item and add it to the database"""
+        items = Item.all()
+        self.assertEqual(items, [])
+        item = ItemFactory()
+        item.create()
+        self.assertIsNotNone(item.id)
+        items = Item.all()
+        self.assertEqual(len(items), 1)

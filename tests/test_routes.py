@@ -203,6 +203,59 @@ class TestOrderService(TestCase):
             new_order["order_notes"], order.order_notes, "order_notes does not match"
         )
 
+    def test_add_item(self):
+        """It should add an item to a valid order id"""
+        # if given valid order id, item should be created and added to the order
+        test_order = self._create_orders(1)[0]
+        test_item = ItemFactory()
+        response = self.client.post(
+            f"{BASE_URL}/{test_order.id}/items",
+            json=test_item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = response.get_json()
+        self.assertIsNotNone(data["id"])
+        self.assertEqual(data["order_id"], test_order.id)
+        self.assertEqual(data["product_id"], test_item.product_id)
+        self.assertEqual(data["quantity"], test_item.quantity)
+        self.assertEqual(data["unit_price"], float(test_item.unit_price))
+
+        # order id is not found
+        sad_path_order_id = -1
+        sad_path_test_item = ItemFactory()
+        response = self.client.post(
+            f"{BASE_URL}/{sad_path_order_id}/items",
+            json=sad_path_test_item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_item_list(self):
+        """It should return the list of items in an order"""
+        # add two items to order
+        order = self._create_orders(1)[0]
+        item_list = ItemFactory.create_batch(2)
+
+        # Create item 1
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items", json=item_list[0].serialize()
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Create item 2
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items", json=item_list[1].serialize()
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # get the list back and make sure there are 2
+        resp = self.client.get(f"{BASE_URL}/{order.id}/items")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.get_json()
+        self.assertEqual(len(data), 2)
+
     def test_delete_item(self):
         """It should Delete an Item"""
         order = self._create_orders(1)[0]

@@ -208,7 +208,147 @@ def delete_items(order_id, item_id):
     return "", status.HTTP_204_NO_CONTENT
 
 
-# Todo: Place your REST API code here ...
+# TEMPORARY CODE FOR GET AND POST ITEMS IN AN ORDER TO SUPPORT DELETE FUNCTIONALITY.
+# Edit/Remove the following code once when GET and POST items fully implemented
+######################################################################
+@app.route("/orders/<int:order_id>/items", methods=["POST"])
+def create_items(order_id):
+    """
+    Create an Item for an Order
+
+    This endpoint will add an item to an order
+    """
+    app.logger.info("Request to create an Item for Order with id: %s", order_id)
+    check_content_type("application/json")
+
+    # See if the order exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' could not be found.",
+        )
+
+    # Create an item from the json data
+    item = Item()
+    item.deserialize(request.get_json())
+
+    # Append the item to the order
+    order.items.append(item)
+    order.update()
+
+    # Prepare a message to return
+    message = item.serialize()
+
+    return jsonify(message), status.HTTP_201_CREATED
+
+
+@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["GET"])
+def get_items(order_id, item_id):
+    """
+    Get an Item
+
+    This endpoint returns just an item
+    """
+    app.logger.info("Request to retrieve Item %s for Order id: %s", (item_id, order_id))
+
+    # See if the item exists and abort if it doesn't
+    item = Item.find(item_id)
+    if not item:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{item_id}' could not be found.",
+        )
+
+    return jsonify(item.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# DELETE AN AN ITEM FROM AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["DELETE"])
+def delete_items(order_id, item_id):
+    """
+    Delete an Item
+
+    This endpoint will delete an Item based the id specified in the path
+    """
+    app.logger.info("Request to delete Item %s for Order id: %s", (item_id, order_id))
+
+    # See if the item exists and delete it if it does
+    item = Item.find(item_id)
+    if item:
+        item.delete()
+
+    return "", status.HTTP_204_NO_CONTENT
+
+
+######################################################################
+# ADD AN ITEM TO AN ORDER
+######################################################################
+
+
+@app.route("/orders/<int:order_id>/items", methods=["POST"])
+def add_item(order_id):
+    """
+    Creates an item and adds item to an order
+
+    Args:
+        order_id ( integer )
+    """
+    app.logger.info("Adding an item to the order with order_id %s", order_id)
+    check_content_type("application/json")
+
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' was not be found",
+        )
+
+    # Create an item from the json data
+    item = Item()
+    item.deserialize(request.get_json())
+    item.order_id = order_id
+
+    order.items.append(item)
+    order.update()
+    item.update()
+
+    location_url = url_for(
+        "add_item", order_id=order.id, item_id=item.id, _external=True
+    )
+    app.logger.info("Item with id %s created for order with %s", item.id, order.id)
+    return (
+        jsonify(item.serialize()),
+        status.HTTP_201_CREATED,
+        {"Location": location_url},
+    )
+
+
+######################################################################
+# LIST ITEMS
+######################################################################
+
+
+@app.route("/orders/<int:order_id>/items", methods=["GET"])
+def list_items(order_id):
+    """Returns all of the Items for an Order"""
+    app.logger.info("Request for all Items for Order with id: %s", order_id)
+
+    # See if the order exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' could not be found.",
+        )
+
+    # Get the items for the account
+    results = [item.serialize() for item in order.items]
+
+    return jsonify(results), status.HTTP_200_OK
+
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S

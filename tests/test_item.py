@@ -101,7 +101,7 @@ class TestItem(TestCase):
         item = Item()
         self.assertRaises(DataValidationError, item.deserialize, [])
 
-    def test_delete_order_address(self):
+    def test_delete_order_item(self):
         """It should Delete an order's items"""
         orders = Order.all()
         self.assertEqual(orders, [])
@@ -123,3 +123,26 @@ class TestItem(TestCase):
         # Fetch it back again
         order = Order.find(order.id)
         self.assertEqual(len(order.items), 0)
+
+    def test_add_an_item(self):
+        """It should create an item and add it to the database"""
+        items = Item.all()
+        self.assertEqual(items, [])
+        item = ItemFactory()
+        item.create()
+        self.assertIsNotNone(item.id)
+        items = Item.all()
+        self.assertEqual(len(items), 1)
+
+    def test_list_order_items(self):
+        """It should list all items in an order"""
+        self.assertEqual(Order.all(), [])
+        order = OrderFactory()
+        order.create()
+        self.assertEqual(len(Order.all()), 1)
+        for _ in range(10):
+            item = ItemFactory(order=order)
+            item.create()
+        self.assertEqual(len(Item.all()), 10)
+        for item in Item.all():
+            self.assertEqual(item.order.id, order.id)

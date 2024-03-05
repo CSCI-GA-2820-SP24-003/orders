@@ -232,10 +232,10 @@ class TestOrderService(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
-        print(data)
+
         self.assertEqual(data["order_id"], order.id)
         self.assertEqual(data["id"], item["id"])
-        print('here 1')
+
         sad_path_order_id = -1
         response = self.client.get(
             f"/orders/{sad_path_order_id}/items/123",
@@ -245,9 +245,7 @@ class TestOrderService(TestCase):
         self.assertEqual(
             response.status_code, status.HTTP_404_NOT_FOUND
         )
-        print('here 2')
         sad_path_item_id = -1
-        print(order.id)
         response = self.client.get(
             f"/orders/{order.id}/items/{sad_path_item_id}",
             content_type="application/json",
@@ -257,7 +255,6 @@ class TestOrderService(TestCase):
         self.assertEqual(
             response.status_code, status.HTTP_404_NOT_FOUND
         )
-        print('here 3')
 
     def test_add_item(self):
         """It should add an item to a valid order id"""

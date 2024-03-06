@@ -27,7 +27,7 @@ class TestOrderService(TestCase):
     def setUpClass(cls):
         """Run once before all tests"""
         app.config["TESTING"] = True
-        app.config["DEBUG"] = False
+        app.config["DEBUG"] = True
         # Set up the test database
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
         app.logger.setLevel(logging.CRITICAL)
@@ -355,5 +355,32 @@ class TestOrderService(TestCase):
         """It should not allow an illegal method call"""
         resp = self.client.put(BASE_URL, json={"not": "today"})
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_get_items(self):
+        """It should return the item"""
+        order = self._create_orders(1)[0]
+        item = ItemFactory()
+        print(item)
+        print("SENDING:", item.serialize())
+        resp = self.client.post(
+            f"/orders/{order.id}/items",
+            json=item.serialize(),
+            content_type="application/json",
+        )
+        print("GOT BACK:", resp.data)
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        data = resp.get_json()
+        item_id = data["id"]
+        response = self.client.get(f"/orders/{order.id}/items/{item_id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["id"], item_id)
+
+    def test_get_items_sad(self):
+        """It should not return the item and give error"""
+        order = self._create_orders(1)[0]
+        response = self.client.get(f"/orders/{order.id}/items/-1")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     # Todo: Add your test cases here...

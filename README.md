@@ -42,13 +42,17 @@ pyproject.toml      - Poetry list of Python libraries required by your code
 service/                   - service python package
 ├── __init__.py            - package initializer
 ├── config.py              - configuration parameters
-├── models.py              - module with business models
 ├── routes.py              - module with service routes
-└── common                 - common code package
-    ├── cli_commands.py    - Flask command to recreate all tables
-    ├── error_handlers.py  - HTTP error handling code
-    ├── log_handlers.py    - logging setup code
-    └── status.py          - HTTP status constants
+├── common                 - common code package
+|   ├── cli_commands.py    - Flask command to recreate all tables
+|   ├── error_handlers.py  - HTTP error handling code
+|   ├── log_handlers.py    - logging setup code
+|   └── status.py          - HTTP status constants
+└   models                 - module with business models
+    ├── __init__.py        - model initializer
+    ├── item.py            - item model
+    ├── order.py           - order model
+    ├── persistent_base.py - abstract model class
 
 tests/                     - test cases package
 ├── __init__.py            - package initializer
@@ -56,6 +60,29 @@ tests/                     - test cases package
 ├── test_models.py         - test suite for business models
 └── test_routes.py         - test suite for service routes
 ```
+
+## Functions
+
+These are the RESTful routes for `orders` and `items`
+```
+Endpoint          Methods  Rule
+----------------  -------  -----------------------------------------------------
+index             GET      /
+
+list_orders       GET      /orders
+create_orders     POST     /orders
+get_orders        GET      /orders/<order_id>
+update_orders     PUT      /orders/<order_id>
+delete_orders     DELETE   /orders/<order_id>
+
+list_items        GET      /orders/<int:order_id>/items
+create_items      POST     /orders/<order_id>/items
+get_items         GET      /orders/<order_id>/items/<item_id>
+update_items      PUT      /orders/<order_id>/items/<item_id>
+delete_items      DELETE   /orders/<order_id>/items/<item_id>
+```
+
+The test cases have 95% test coverage and can be run with `pytest`
 
 ## License
 

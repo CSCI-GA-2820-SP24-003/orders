@@ -208,6 +208,30 @@ class TestOrder(TestCase):
         order = OrderFactory()
         self.assertRaises(DataValidationError, order.create)
 
+    def test_update_order(self):
+        """It should Update an order"""
+        order = OrderFactory(customer_id=55)
+        order.create()
+        # Assert that it was assigned an id and shows up in the database
+        self.assertIsNotNone(order.id)
+        self.assertEqual(order.customer_id, 55)
+
+        # Fetch it back
+        order = Order.find(order.id)
+        order.customer_id = 55
+        order.update()
+
+        # Fetch it back again
+        order = Order.find(order.id)
+        self.assertEqual(order.customer_id, 55)
+
+    @patch("service.models.db.session.commit")
+    def test_update_order_failed(self, exception_mock):
+        """It should not update an Order on database error"""
+        exception_mock.side_effect = Exception()
+        order = OrderFactory()
+        self.assertRaises(DataValidationError, order.update)
+
 
 ######################################################################
 #  T E S T   E X C E P T I O N   H A N D L E R S

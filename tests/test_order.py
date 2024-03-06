@@ -128,8 +128,8 @@ class TestOrder(TestCase):
     def test_deserialize_an_order(self):
         """It should Deserialize an order"""
         order = OrderFactory()
-        # order.items.append(ItemFactory())
-        # order.create()
+        order.items.append(ItemFactory())
+        order.create()
         serial_order = order.serialize()
         new_order = Order()
         new_order.deserialize(serial_order)
@@ -142,6 +142,7 @@ class TestOrder(TestCase):
         self.assertEqual(new_order.shipping_cost, order.shipping_cost)
         self.assertEqual(new_order.expected_date, order.expected_date)
         self.assertEqual(new_order.order_notes, order.order_notes)
+        self.assertEqual(len(new_order.items), len(order.items))
 
     def test_deserialize_with_key_error(self):
         """It should not Deserialize an order with a KeyError"""

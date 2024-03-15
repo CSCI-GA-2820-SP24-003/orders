@@ -70,6 +70,7 @@ class TestCaseBase(TestCase):
 class TestOrder(TestCase):
     """Order Model Test Cases"""
 
+    # pylint: disable=duplicate-code
     @classmethod
     def setUpClass(cls):
         """This runs once before the entire test suite"""

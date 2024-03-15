@@ -31,6 +31,7 @@ These should be copied using a bash shell as follows:
 The project contains the following:
 
 ```text
+.github/workflows   - Folder with Continuous Integration Support
 .gitignore          - this will ignore vagrant and other metadata files
 .flaskenv           - Environment variables to configure Flask
 .gitattributes      - File to gix Windows CRLF issues

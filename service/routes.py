@@ -169,7 +169,6 @@ def cancel_order(order_id):
     This endpoint will cancel an Order
     """
     app.logger.info("Request to cancel order with id: %s", order_id)
-    check_content_type("application/json")
 
     # See if the order exists and abort if it doesn't
     order = Order.find(order_id)
@@ -181,8 +180,7 @@ def cancel_order(order_id):
         abort(status.HTTP_409_CONFLICT, "Orders that have been delivered cannot be cancelled")
 
     # Update from the json in the body of the request
-    order.deserialize(request.get_json())
-    order.id = order_id
+    order.status = OrderStatus.CANCELLED
     order.update()
 
     return jsonify(order.serialize()), status.HTTP_200_OK

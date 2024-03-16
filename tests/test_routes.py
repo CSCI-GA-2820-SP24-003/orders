@@ -232,9 +232,8 @@ class TestOrderService(TestCase):
 
         # Cancel a Started Order
         started_order = resp.get_json()
-        started_order["status"] = "CANCELLED"
         order_id = started_order["id"]
-        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=started_order)
+        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         updated_order = resp.get_json()
         self.assertEqual(updated_order["status"], "CANCELLED")
@@ -247,8 +246,7 @@ class TestOrderService(TestCase):
         self.assertEqual(packing_order["status"], "PACKING")
 
         # Cancel a Packing Order
-        packing_order["status"] = "CANCELLED"
-        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=packing_order)
+        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         updated_order = resp.get_json()
         self.assertEqual(updated_order["status"], "CANCELLED")
@@ -261,14 +259,13 @@ class TestOrderService(TestCase):
         self.assertEqual(shipping_order["status"], "SHIPPING")
 
         # Cancel a Shipping Order
-        shipping_order["status"] = "CANCELLED"
-        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=shipping_order)
+        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         cancelled_order = resp.get_json()
         self.assertEqual(cancelled_order["status"], "CANCELLED")
 
         # Cancel a Cancelled Order (testing idempotence)
-        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=cancelled_order)
+        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         recancelled_order = resp.get_json()
         self.assertEqual(recancelled_order["status"], "CANCELLED")
@@ -290,9 +287,7 @@ class TestOrderService(TestCase):
         self.assertEqual(delivered_order["status"], "DELIVERED")
 
         # Fail at Cancelling Delivered Order
-
-        delivered_order["status"] = "CANCELLED"
-        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=delivered_order)
+        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
         data = resp.get_data(as_text=True)
         data = data.replace("<p>", "*")
@@ -309,9 +304,7 @@ class TestOrderService(TestCase):
         self.assertEqual(returned_order["status"], "RETURNED")
 
         # Fail at Cancelling Returned Order
-
-        returned_order["status"] = "CANCELLED"
-        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=returned_order)
+        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
         data = resp.get_data(as_text=True)
         data = data.replace("<p>", "*")

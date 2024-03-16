@@ -205,12 +205,12 @@ class TestOrderService(TestCase):
 
     def test_update_order(self):
         """It should Update an existing Order"""
-        # create an Order to update
+        # Create an Order to update
         test_order = OrderFactory()
         resp = self.client.post(BASE_URL, json=test_order.serialize())
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
-        # update the pet
+        # Update the Order
         new_order = resp.get_json()
         new_order["shipping_address"] = "New Road New City"
         new_order_id = new_order["id"]
@@ -218,6 +218,22 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         updated_order = resp.get_json()
         self.assertEqual(updated_order["shipping_address"], "New Road New City")
+
+    def test_cancel__pre_shipped_order(self):
+        """It should cancel an order that isn't shipped yet"""
+        # Create an Order to cancel
+        test_order = OrderFactory()
+        resp = self.client.post(BASE_URL, json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Update the Order
+        new_order = resp.get_json()
+        new_order["status"] = "CANCELLED"
+        new_order_id = new_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{new_order_id}/cancel", json=new_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated_order = resp.get_json()
+        self.assertEqual(updated_order["status"], "CANCELLED")
 
     def test_add_item(self):
         """It should add an item to a valid order id"""

@@ -8,6 +8,7 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, Order
+from service.models.order import OrderStatus
 from tests.factories import OrderFactory, ItemFactory
 
 DATABASE_URI = os.getenv(
@@ -69,23 +70,13 @@ class TestOrderService(TestCase):
         return orders
 
     ######################################################################
-    #  P L A C E   T E S T   C A S E S   H E R E
+    #  O R D E R   T E S T   C A S E S
     ######################################################################
 
     def test_index(self):
         """It should call the home page"""
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-    def test_delete_order(self):
-        """It should Delete a Order"""
-        test_order = self._create_orders(1)[0]
-        response = self.client.delete(f"{BASE_URL}/{test_order.id}")
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(len(response.data), 0)
-        # make sure they are deleted
-        response = self.client.get(f"{BASE_URL}/{test_order.id}")
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_list_orders(self):
         """It should list all orders"""
@@ -219,21 +210,106 @@ class TestOrderService(TestCase):
         updated_order = resp.get_json()
         self.assertEqual(updated_order["shipping_address"], "New Road New City")
 
-    def test_cancel__pre_shipped_order(self):
-        """It should cancel an order that isn't shipped yet"""
+    def test_cancel_order(self):
+        """It should cancel an order that isn't shipped yet, and fail to cancel a cancelled order"""
         # Create an Order to cancel
         test_order = OrderFactory()
         resp = self.client.post(BASE_URL, json=test_order.serialize())
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
-        # Update the Order
+        # Cancel the Order
         new_order = resp.get_json()
         new_order["status"] = "CANCELLED"
         new_order_id = new_order["id"]
         resp = self.client.put(f"{BASE_URL}/{new_order_id}/cancel", json=new_order)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        updated_order = resp.get_json()
-        self.assertEqual(updated_order["status"], "CANCELLED")
+        cancelled_order = resp.get_json()
+        self.assertEqual(cancelled_order["status"], "CANCELLED")
+
+        # Fail to cancel a cancelled Order
+        resp = self.client.put(f"{BASE_URL}/{new_order_id}/cancel", json=cancelled_order)
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+        recancelled_order = resp.get_json()
+        self.assertEqual(recancelled_order["status"], "CANCELLED")
+
+    def test_cancel_delivered_order(self):
+        """It should fail to cancel a delivered order"""
+        # Create an Order to cancel
+        test_order = OrderFactory()
+        resp = self.client.post(BASE_URL, json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Update the Order to Delivered
+        new_order = resp.get_json()
+        new_order["status"] = "DELIVERED"
+        new_order_id = new_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{new_order_id}", json=new_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        delivered_order = resp.get_json()
+        self.assertEqual(delivered_order["status"], "DELIVERED")
+
+        # Fail to cancel delivered Order
+        resp = self.client.put(f"{BASE_URL}/{new_order_id}/cancel", json=delivered_order)
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+        cancelled_delivered_order = resp.get_json()
+        self.assertEqual(cancelled_delivered_order["status"], "DELIVERED")
+
+    def test_delete_order(self):
+        """It should Delete a Order"""
+        test_order = self._create_orders(1)[0]
+        response = self.client.delete(f"{BASE_URL}/{test_order.id}")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(response.data), 0)
+        # make sure they are deleted
+        response = self.client.get(f"{BASE_URL}/{test_order.id}")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_bad_request(self):
+        """It should not Create when sending the wrong data"""
+        resp = self.client.post(BASE_URL, json={"name": "not enough data"})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_unsupported_media_type(self):
+        """It should not Create when sending wrong media type"""
+        order = OrderFactory()
+        resp = self.client.post(
+            BASE_URL, json=order.serialize(), content_type="test/html"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    def test_method_not_allowed(self):
+        """It should not allow an illegal method call"""
+        resp = self.client.put(BASE_URL, json={"not": "today"})
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    ######################################################################
+    #  I T E M   T E S T   C A S E S
+    ######################################################################
+
+    def test_get_item_list(self):
+        """It should return the list of items in an order"""
+        # add two items to order
+        order = self._create_orders(1)[0]
+        item_list = ItemFactory.create_batch(2)
+
+        # Create item 1
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items", json=item_list[0].serialize()
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Create item 2
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items", json=item_list[1].serialize()
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # get the list back and make sure there are 2
+        resp = self.client.get(f"{BASE_URL}/{order.id}/items")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.get_json()
+        self.assertEqual(len(data), 2)
 
     def test_add_item(self):
         """It should add an item to a valid order id"""
@@ -263,58 +339,32 @@ class TestOrderService(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_get_item_list(self):
-        """It should return the list of items in an order"""
-        # add two items to order
-        order = self._create_orders(1)[0]
-        item_list = ItemFactory.create_batch(2)
-
-        # Create item 1
-        resp = self.client.post(
-            f"{BASE_URL}/{order.id}/items", json=item_list[0].serialize()
-        )
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-
-        # Create item 2
-        resp = self.client.post(
-            f"{BASE_URL}/{order.id}/items", json=item_list[1].serialize()
-        )
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-
-        # get the list back and make sure there are 2
-        resp = self.client.get(f"{BASE_URL}/{order.id}/items")
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-        data = resp.get_json()
-        self.assertEqual(len(data), 2)
-
-    def test_delete_item(self):
-        """It should Delete an Item"""
+    def test_get_items(self):
+        """It should return the item"""
         order = self._create_orders(1)[0]
         item = ItemFactory()
+        print(item)
+        print("SENDING:", item.serialize())
         resp = self.client.post(
-            f"{BASE_URL}/{order.id}/items",
+            f"/orders/{order.id}/items",
             json=item.serialize(),
             content_type="application/json",
         )
+        print("GOT BACK:", resp.data)
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         data = resp.get_json()
-        logging.debug(data)
         item_id = data["id"]
+        response = self.client.get(f"/orders/{order.id}/items/{item_id}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertIsNotNone(data)
+        self.assertEqual(data["id"], item_id)
 
-        # send delete request
-        resp = self.client.delete(
-            f"{BASE_URL}/{order.id}/items/{item_id}",
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
-
-        # retrieve it back and make sure item is not there
-        resp = self.client.get(
-            f"{BASE_URL}/{order.id}/items/{item_id}",
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+    def test_get_items_sad(self):
+        """It should not return the item and give error"""
+        order = self._create_orders(1)[0]
+        response = self.client.get(f"/orders/{order.id}/items/-1")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_update_item(self):
         """It should Update an item on an order"""
@@ -354,47 +404,30 @@ class TestOrderService(TestCase):
         self.assertEqual(data["order_id"], order.id)
         self.assertEqual(data["name"], "XXXX")
 
-    def test_bad_request(self):
-        """It should not Create when sending the wrong data"""
-        resp = self.client.post(BASE_URL, json={"name": "not enough data"})
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_unsupported_media_type(self):
-        """It should not Create when sending wrong media type"""
-        order = OrderFactory()
-        resp = self.client.post(
-            BASE_URL, json=order.serialize(), content_type="test/html"
-        )
-        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-
-    def test_method_not_allowed(self):
-        """It should not allow an illegal method call"""
-        resp = self.client.put(BASE_URL, json={"not": "today"})
-        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def test_get_items(self):
-        """It should return the item"""
+    def test_delete_item(self):
+        """It should Delete an Item"""
         order = self._create_orders(1)[0]
         item = ItemFactory()
-        print(item)
-        print("SENDING:", item.serialize())
         resp = self.client.post(
-            f"/orders/{order.id}/items",
+            f"{BASE_URL}/{order.id}/items",
             json=item.serialize(),
             content_type="application/json",
         )
-        print("GOT BACK:", resp.data)
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         data = resp.get_json()
+        logging.debug(data)
         item_id = data["id"]
-        response = self.client.get(f"/orders/{order.id}/items/{item_id}")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.get_json()
-        self.assertIsNotNone(data)
-        self.assertEqual(data["id"], item_id)
 
-    def test_get_items_sad(self):
-        """It should not return the item and give error"""
-        order = self._create_orders(1)[0]
-        response = self.client.get(f"/orders/{order.id}/items/-1")
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        # send delete request
+        resp = self.client.delete(
+            f"{BASE_URL}/{order.id}/items/{item_id}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+        # retrieve it back and make sure item is not there
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}/items/{item_id}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)

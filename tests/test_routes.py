@@ -209,6 +209,20 @@ class TestOrderService(TestCase):
         updated_order = resp.get_json()
         self.assertEqual(updated_order["shipping_address"], "New Road New City")
 
+    def test_update_nonexistent_order(self):
+        """It should not Update an Order that doesn't exist"""
+        # Create an Order to update
+        test_order = OrderFactory()
+        resp = self.client.post(BASE_URL, json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Fail to Update a nonexistent Order
+        new_order = resp.get_json()
+        new_order["shipping_address"] = "New Road New City"
+        new_order_id = new_order["id"] + 1
+        resp = self.client.put(f"{BASE_URL}/{new_order_id}", json=new_order)
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_cancel_order_success(self):
         """It should Cancel an Order that isn't shipped yet"""
         # Create an Order to cancel
@@ -280,8 +294,12 @@ class TestOrderService(TestCase):
         delivered_order["status"] = "CANCELLED"
         resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=delivered_order)
         self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
-        data = resp.get_json()
-        self.assertEqual(data["message"], "Orders that have been delivered cannot be cancelled")
+        data = resp.get_data(as_text=True)
+        data = data.replace("<p>", "*")
+        data = data.replace("</p>", "*")
+        tokens = data.split("*")
+        data = tokens[1]
+        self.assertEqual(data, "Orders that have been delivered cannot be cancelled")
 
         # Update the Order to Returned
         delivered_order["status"] = "RETURNED"
@@ -295,8 +313,26 @@ class TestOrderService(TestCase):
         returned_order["status"] = "CANCELLED"
         resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=returned_order)
         self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
-        data = resp.get_json()
-        self.assertEqual(data["message"], "Orders that have been delivered cannot be cancelled")
+        data = resp.get_data(as_text=True)
+        data = data.replace("<p>", "*")
+        data = data.replace("</p>", "*")
+        tokens = data.split("*")
+        data = tokens[1]
+        self.assertEqual(data, "Orders that have been delivered cannot be cancelled")
+
+    def test_cancel_nonexistent_order(self):
+        """It should not Cancel an Order that doesn't exist"""
+        # Create an Order to cancel
+        test_order = OrderFactory()
+        resp = self.client.post(BASE_URL, json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Fail to Cancel a nonexistent Order
+        started_order = resp.get_json()
+        started_order["status"] = "CANCELLED"
+        order_id = started_order["id"]+1
+        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=started_order)
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete_order(self):
         """It should Delete a Order"""

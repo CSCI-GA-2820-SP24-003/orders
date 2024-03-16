@@ -48,6 +48,9 @@ class Order(db.Model, PersistentBase):
     Class that represents an Order
     """
 
+    # pylint: disable=too-many-instance-attributes
+    # Eight is reasonable in this case.
+
     # Table Schema
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.Integer)

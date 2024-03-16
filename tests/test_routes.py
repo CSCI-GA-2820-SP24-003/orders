@@ -382,5 +382,3 @@ class TestOrderService(TestCase):
         order = self._create_orders(1)[0]
         response = self.client.get(f"/orders/{order.id}/items/-1")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    # Todo: Add your test cases here...

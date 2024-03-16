@@ -2,8 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
-
-This is a skeleton you can use to start your projects
+[![codecov](https://codecov.io/gh/CSCI-GA-2820-SP24-003/orders/graph/badge.svg?token=7B9A593R95)](https://codecov.io/gh/CSCI-GA-2820-SP24-003/orders)
 
 ## Overview
 
@@ -32,6 +31,7 @@ These should be copied using a bash shell as follows:
 The project contains the following:
 
 ```text
+.github/workflows   - Folder with Continuous Integration Support
 .gitignore          - this will ignore vagrant and other metadata files
 .flaskenv           - Environment variables to configure Flask
 .gitattributes      - File to gix Windows CRLF issues

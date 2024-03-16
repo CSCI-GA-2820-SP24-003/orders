@@ -39,7 +39,6 @@ def index():
         jsonify(
             name="Orders REST API Service",
             version="1.0",
-            # Todo: Uncomment the next line when GET /orders is implemented
             paths=url_for("list_orders", _external=True),
         ),
         status.HTTP_200_OK,

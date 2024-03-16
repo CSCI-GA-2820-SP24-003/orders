@@ -8,7 +8,6 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, Order
-from service.models.order import OrderStatus
 from tests.factories import OrderFactory, ItemFactory
 
 DATABASE_URI = os.getenv(
@@ -210,30 +209,58 @@ class TestOrderService(TestCase):
         updated_order = resp.get_json()
         self.assertEqual(updated_order["shipping_address"], "New Road New City")
 
-    def test_cancel_order(self):
-        """It should cancel an order that isn't shipped yet, and fail to cancel a cancelled order"""
+    def test_cancel_order_success(self):
+        """It should Cancel an Order that isn't shipped yet"""
         # Create an Order to cancel
         test_order = OrderFactory()
         resp = self.client.post(BASE_URL, json=test_order.serialize())
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
-        # Cancel the Order
-        new_order = resp.get_json()
-        new_order["status"] = "CANCELLED"
-        new_order_id = new_order["id"]
-        resp = self.client.put(f"{BASE_URL}/{new_order_id}/cancel", json=new_order)
+        # Cancel a Started Order
+        started_order = resp.get_json()
+        started_order["status"] = "CANCELLED"
+        order_id = started_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=started_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated_order = resp.get_json()
+        self.assertEqual(updated_order["status"], "CANCELLED")
+
+        # Update to Packing Order
+        updated_order["status"] = "PACKING"
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=updated_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        packing_order = resp.get_json()
+        self.assertEqual(packing_order["status"], "PACKING")
+
+        # Cancel a Packing Order
+        packing_order["status"] = "CANCELLED"
+        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=packing_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated_order = resp.get_json()
+        self.assertEqual(updated_order["status"], "CANCELLED")
+
+        # Update to Shipping Order
+        updated_order["status"] = "SHIPPING"
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=updated_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        shipping_order = resp.get_json()
+        self.assertEqual(shipping_order["status"], "SHIPPING")
+
+        # Cancel a Shipping Order
+        shipping_order["status"] = "CANCELLED"
+        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=shipping_order)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         cancelled_order = resp.get_json()
         self.assertEqual(cancelled_order["status"], "CANCELLED")
 
-        # Fail to cancel a cancelled Order
-        resp = self.client.put(f"{BASE_URL}/{new_order_id}/cancel", json=cancelled_order)
-        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+        # Cancel a Cancelled Order (testing idempotence)
+        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=cancelled_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
         recancelled_order = resp.get_json()
         self.assertEqual(recancelled_order["status"], "CANCELLED")
 
-    def test_cancel_delivered_order(self):
-        """It should fail to cancel a delivered order"""
+    def test_cancel_order_failure(self):
+        """It should not Cancel an Order that is shipped"""
         # Create an Order to cancel
         test_order = OrderFactory()
         resp = self.client.post(BASE_URL, json=test_order.serialize())
@@ -242,17 +269,34 @@ class TestOrderService(TestCase):
         # Update the Order to Delivered
         new_order = resp.get_json()
         new_order["status"] = "DELIVERED"
-        new_order_id = new_order["id"]
-        resp = self.client.put(f"{BASE_URL}/{new_order_id}", json=new_order)
+        order_id = new_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=new_order)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         delivered_order = resp.get_json()
         self.assertEqual(delivered_order["status"], "DELIVERED")
 
-        # Fail to cancel delivered Order
-        resp = self.client.put(f"{BASE_URL}/{new_order_id}/cancel", json=delivered_order)
+        # Fail at Cancelling Delivered Order
+
+        delivered_order["status"] = "CANCELLED"
+        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=delivered_order)
         self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
-        cancelled_delivered_order = resp.get_json()
-        self.assertEqual(cancelled_delivered_order["status"], "DELIVERED")
+        data = resp.get_json()
+        self.assertEqual(data["message"], "Orders that have been delivered cannot be cancelled")
+
+        # Update the Order to Returned
+        delivered_order["status"] = "RETURNED"
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=delivered_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        returned_order = resp.get_json()
+        self.assertEqual(returned_order["status"], "RETURNED")
+
+        # Fail at Cancelling Returned Order
+
+        returned_order["status"] = "CANCELLED"
+        resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=returned_order)
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+        data = resp.get_json()
+        self.assertEqual(data["message"], "Orders that have been delivered cannot be cancelled")
 
     def test_delete_order(self):
         """It should Delete a Order"""

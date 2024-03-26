@@ -26,6 +26,7 @@ from flask import request, url_for, abort
 from flask import current_app as app  # Import Flask application
 
 from service.models import Order, Item
+from service.models.order import OrderStatus
 from service.common import status  # HTTP Status Codes
 
 
@@ -152,6 +153,34 @@ def update_orders(order_id):
     # Update from the json in the body of the request
     order.deserialize(request.get_json())
     order.id = order_id
+    order.update()
+
+    return jsonify(order.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# CANCEL AN EXISTING ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/cancel", methods=["PUT"])
+def cancel_order(order_id):
+    """
+    Cancel an Order
+
+    This endpoint will cancel an Order
+    """
+    app.logger.info("Request to cancel order with id: %s", order_id)
+
+    # See if the order exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+
+    # Abort Cancellation if order has been delivered
+    if order.status in (OrderStatus.DELIVERED, OrderStatus.RETURNED):
+        abort(status.HTTP_409_CONFLICT, "Orders that have been delivered cannot be cancelled")
+
+    # Update from the json in the body of the request
+    order.status = OrderStatus.CANCELLED
     order.update()
 
     return jsonify(order.serialize()), status.HTTP_200_OK

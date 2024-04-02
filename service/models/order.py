@@ -21,6 +21,7 @@ Persistent Base class for database CRUD functions
 import logging
 from enum import Enum
 from datetime import date
+from sqlalchemy import desc
 from .persistent_base import db, PersistentBase, DataValidationError
 from .item import Item
 
@@ -125,3 +126,13 @@ class Order(db.Model, PersistentBase):
             ) from error
 
         return self
+
+    @classmethod
+    def find_by_customer_id(cls, customer_id):
+        """Returns all Orders with the given customer id
+
+        Args:
+            customer_id (Integer): the customer_id of the Orders you want to match
+        """
+        logger.info("Processing name query for %s ...", customer_id)
+        return cls.query.filter(cls.customer_id == customer_id).order_by(desc(Order.order_date))

@@ -173,3 +173,22 @@ class TestItem(TestCase):
         order = Order.find(order.id)
         item = order.items[0]
         self.assertEqual(item.name, "XX")
+
+    def test_find_by_product_id(self):
+        """Find Items by product_id"""
+        order = OrderFactory()
+        order.create()
+
+        item = ItemFactory(
+            order_id=order.id, product_id=1, name="ruler", quantity=1, unit_price=10.50
+        )
+        item.create()
+        item2 = ItemFactory(
+            order_id=order.id, product_id=2, name="drill", quantity=2, unit_price=11
+        )
+        item2.create()
+        items = Item.find_by_product_id(1)
+        self.assertEqual(items[0].product_id, 1)
+        self.assertEqual(items[0].name, "ruler")
+        self.assertEqual(items[0].quantity, 1)
+        self.assertEqual(items[0].unit_price, 10.50)

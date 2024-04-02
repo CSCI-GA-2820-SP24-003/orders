@@ -19,7 +19,7 @@ Orders Service
 
 This service implements a REST API that allows you to manage Orders for a financial service.
 """
-from datetime import datetime
+# from datetime import datetime
 from flask import jsonify
 
 from flask import request, url_for, abort
@@ -177,7 +177,10 @@ def cancel_order(order_id):
 
     # Abort Cancellation if order has been delivered
     if order.status in (OrderStatus.DELIVERED, OrderStatus.RETURNED):
-        abort(status.HTTP_409_CONFLICT, "Orders that have been delivered cannot be cancelled")
+        abort(
+            status.HTTP_409_CONFLICT,
+            "Orders that have been delivered cannot be cancelled",
+        )
 
     # Update from the json in the body of the request
     order.status = OrderStatus.CANCELLED
@@ -185,42 +188,42 @@ def cancel_order(order_id):
 
     return jsonify(order.serialize()), status.HTTP_200_OK
 
+
 ######################################################################
 # Query Orders based on a Date Range
 ######################################################################
-@app.route("/orders", methods=["GET"])
-def query_orders():
-    """
-    List Orders filtered by a Date Range or return all Orders if no Date Range is specified.
+# @app.route("/orders", methods=["GET"])
+# def query_orders():
+#     """
+#     List Orders filtered by a Date Range or return all Orders if no Date Range is specified.
 
-    This endpoint returns orders filtered by a date range if provided, otherwise, it returns all orders.
-    """
-    app.logger.info("Request for order list within a specific date range or all orders")
+#     This endpoint returns orders filtered by a date range if provided, otherwise, it returns all orders.
+#     """
+#     app.logger.info("Request for order list within a specific date range or all orders")
 
-    start_date = request.args.get('order-start')
-    end_date = request.args.get('order-end')
+#     start_date = request.args.get('order-start')
+#     end_date = request.args.get('order-end')
 
-    start_date_obj = None
-    end_date_obj = None
-    
-    if start_date:
-        start_date_obj = datetime.strptime(start_date, '%Y-%m-%d')
-    if end_date:
-        end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
+#     start_date_obj = None
+#     end_date_obj = None
 
-    query = Order.query
-    if start_date_obj:
-        query = query.filter(Order.created_at >= start_date_obj)
-    if end_date_obj:
-        query = query.filter(Order.created_at <= end_date_obj)
+#     if start_date:
+#         start_date_obj = datetime.strptime(start_date, '%Y-%m-%d')
+#     if end_date:
+#         end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
 
-    orders = query.order_by(Order.created_at.desc()).all()
+#     query = Order.query
+#     if start_date_obj:
+#         query = query.filter(Order.created_at >= start_date_obj)
+#     if end_date_obj:
+#         query = query.filter(Order.created_at <= end_date_obj)
 
-    results = [order.serialize() for order in orders]
-    app.logger.info(f"Returning {len(results)} orders")
+#     orders = query.order_by(Order.created_at.desc()).all()
 
-    return jsonify(results), status.HTTP_200_OK
+#     results = [order.serialize() for order in orders]
+#     app.logger.info(f"Returning {len(results)} orders")
 
+#     return jsonify(results), status.HTTP_200_OK
 
 
 ######################################################################

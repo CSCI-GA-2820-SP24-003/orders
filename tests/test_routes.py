@@ -323,7 +323,7 @@ class TestOrderService(TestCase):
         # Fail to Cancel a nonexistent Order
         started_order = resp.get_json()
         started_order["status"] = "CANCELLED"
-        order_id = started_order["id"]+1
+        order_id = started_order["id"] + 1
         resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=started_order)
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -355,18 +355,21 @@ class TestOrderService(TestCase):
         resp = self.client.put(BASE_URL, json={"not": "today"})
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-
     def test_query_orders_by_date_range(self):
         """It should list orders within a specific date range"""
         # First, create some orders with known dates
-        orders = self._create_orders(5)  # Assuming this creates orders with varying dates
+        orders = self._create_orders(
+            5
+        )  # Assuming this creates orders with varying dates
 
         # Now, query orders by a specific date range that includes at least one of the orders
         start_date = "2023-01-01"
         end_date = "2023-01-31"
-        response = self.client.get(f"{BASE_URL}?order-start={start_date}&order-end={end_date}")
+        response = self.client.get(
+            f"{BASE_URL}?order-start={start_date}&order-end={end_date}"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         data = response.get_json()
         self.assertIsInstance(data, list)
         # Add more assertions here based on the expected number of orders within the date range
@@ -392,8 +395,6 @@ class TestOrderService(TestCase):
         data = response.get_json()
         self.assertIsInstance(data, list)
         # Assertions similar to the previous test
-
-
 
     ######################################################################
     #  I T E M   T E S T   C A S E S
@@ -544,3 +545,48 @@ class TestOrderService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_query_by_product_id(self):
+        """It should query an item by its product id."""
+        order = self._create_orders(1)[0]
+        item = ItemFactory(
+            order_id=order.id, product_id=1, name="ruler", quantity=1, unit_price=10.50
+        )
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items",
+            json=item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        data = resp.get_json()
+        logging.debug(data)
+        product_id = data["product_id"]
+
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}/items?product_id={product_id}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_query_by_product_id_bad_request(self):
+        """It should query an item by its product id (BAD REQUEST)."""
+        order = self._create_orders(1)[0]
+        item = ItemFactory(
+            order_id=order.id, product_id=5, name="ruler", quantity=1, unit_price=10.50
+        )
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items",
+            json=item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        data = resp.get_json()
+        logging.debug(data)
+        # product_id = data["product_id"]
+        # print(product_id)
+
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}/items?product_id={55}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)

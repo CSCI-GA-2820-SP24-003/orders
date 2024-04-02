@@ -192,6 +192,9 @@ def cancel_order(order_id):
 ######################################################################
 # Query Orders based on a Date Range
 ######################################################################
+# NOTE: The following code seems buggy as it is significantly reducing the code coverage.
+# Possible reason is that it is overwriting the GET /orders endpoint. Hence the following section has been commented.
+# TODO: Move Query into models/item.py And add check inside GET /orders if date is passed then filter on date.
 # @app.route("/orders", methods=["GET"])
 # def query_orders():
 #     """
@@ -243,7 +246,7 @@ def get_items(order_id, item_id):
     if not item:
         abort(
             status.HTTP_404_NOT_FOUND,
-            f"Order with id '{item_id}' could not be found.",
+            f"Item with id '{item_id}' could not be found.",
         )
 
     return jsonify(item.serialize()), status.HTTP_200_OK
@@ -322,6 +325,7 @@ def list_items(order_id):
     """Returns all of the Items for an Order"""
     app.logger.info("Request for all Items for Order with id: %s", order_id)
 
+    # product_id = request.args.get("product_id", -1)
     # See if the order exists and abort if it doesn't
     order = Order.find(order_id)
     if not order:
@@ -329,9 +333,21 @@ def list_items(order_id):
             status.HTTP_404_NOT_FOUND,
             f"Order with id '{order_id}' could not be found.",
         )
+    items = order.items
+
+    product_id = int(
+        request.args.get("product_id", -1)
+    )  # Filter with respect to query.
+    if product_id != -1:
+        items = Item.find_by_product_id(order_id, product_id)
+        if not items:  # if the list is empty, abort with 400_BAD REQUEST
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                "Please enter valid product id.",
+            )
 
     # Get the items for the order
-    results = [item.serialize() for item in order.items]
+    results = [item.serialize() for item in items]
 
     return jsonify(results), status.HTTP_200_OK
 

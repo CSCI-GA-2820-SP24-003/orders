@@ -187,7 +187,7 @@ class TestItem(TestCase):
             order_id=order.id, product_id=2, name="drill", quantity=2, unit_price=11
         )
         item2.create()
-        items = Item.find_by_product_id(1)
+        items = Item.find_by_product_id(order.id, 1)
         self.assertEqual(items[0].product_id, 1)
         self.assertEqual(items[0].name, "ruler")
         self.assertEqual(items[0].quantity, 1)

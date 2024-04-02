@@ -76,7 +76,7 @@ class Item(db.Model, PersistentBase):
         return self
 
     @classmethod
-    def find_by_product_id(cls, order_id, product_id):
+    def find_by_product_id(cls, product_id):
         """Returns all Items with the given product_id
 
         Args:

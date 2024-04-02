@@ -299,7 +299,7 @@ def list_items(order_id):
         request.args.get("product_id", -1)
     )  # Filter with respect to query.
     if product_id != -1:
-        items = Item.find_by_product_id(order_id, product_id)
+        items = Item.find_by_product_id(product_id)
         if not items:  # if the list is empty, abort with 400_BAD REQUEST
             abort(
                 status.HTTP_400_BAD_REQUEST,

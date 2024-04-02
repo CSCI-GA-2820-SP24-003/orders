@@ -128,11 +128,11 @@ class Order(db.Model, PersistentBase):
         return self
 
     @classmethod
-    def find_by_customer_id(cls, customer_id):
+    def find_by_customer_id(cls, customer_ids):
         """Returns all Orders with the given customer id
 
         Args:
             customer_id (Integer): the customer_id of the Orders you want to match
         """
-        logger.info("Processing name query for %s ...", customer_id)
-        return cls.query.filter(cls.customer_id == customer_id).order_by(desc(Order.order_date))
+        logger.info("Processing name query for %s ...", customer_ids)
+        return cls.query.filter(cls.customer_id.in_(customer_ids)).order_by(desc(Order.order_date))

@@ -173,33 +173,38 @@ class TestOrder(TestCase):
         orders = Order.all()
         self.assertEqual(orders, [])
         counter = 0
-        for order in OrderFactory.create_batch(10):
+        for order in OrderFactory.create_batch(15):
             order.create()
 
-            # Force the first 5 orders to have the same customer id, and the last 5 to have a different customer id
+            # Have 3 sets of 5 orders with different customer ids.
             if counter < 5:
                 order.customer_id = 10
                 order.update()
                 self.assertEqual(order.customer_id, 10)
-            else:
+            elif counter < 10:
                 order.customer_id = 20
                 order.update()
+                self.assertEqual(order.customer_id, 20)
+            else:
+                order.customer_id = 30
+                order.update()
+                self.assertEqual(order.customer_id, 30)
             counter += 1
 
-        # Assert that there are 5 orders in the database
+        # Assert that there are 15 orders in the database
         orders = Order.all()
-        self.assertEqual(len(orders), 10)
+        self.assertEqual(len(orders), 15)
 
         # Fetch it back by customer id
-        filtered_orders = Order.find_by_customer_id(10)
+        filtered_orders = Order.find_by_customer_id([10, 30])
 
-        # Assert Number of Order with customer id 10 is 3
-        self.assertEqual(filtered_orders.count(), 5)
+        # Assert Number of Order with customer id 10 or 30 is 10
+        self.assertEqual(filtered_orders.count(), 10)
 
-        # Assert customer_ids of query are all 10, and are sorted by date.
+        # Assert customer_ids of query are all 10 or 30, and are sorted by date.
         test_date = date.today()
         for order in filtered_orders:
-            self.assertEqual(order.customer_id, 10)
+            self.assertIn(order.customer_id, [10, 30])
             self.assertLessEqual(order.order_date, test_date)
             test_date = order.order_date
             self.assertEqual(order.order_date, test_date)

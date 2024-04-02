@@ -24,9 +24,9 @@ from unittest import TestCase
 
 from unittest.mock import patch
 from service.models.order import OrderStatus
+from service.models import Order, Item, DataValidationError, db
 
 from wsgi import app
-from service.models import Order, Item, DataValidationError, db
 from tests.factories import OrderFactory, ItemFactory
 
 DATABASE_URI = os.getenv(
@@ -259,6 +259,7 @@ class TestModelQueries(TestCaseBase):
     """Order Model Query Tests"""
 
     def test_query_orders_by_status(self):
+        """Test querying orders by status."""
         orders = OrderFactory.create_batch(5, status=OrderStatus.STARTED)
         for order in orders:
             order.create()

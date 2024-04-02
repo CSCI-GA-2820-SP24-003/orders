@@ -119,6 +119,14 @@ class TestOrderService(TestCase):
             self.assertEqual(order_data["customer_id"], order.customer_id)
             # Add more assertions here to check other fields if necessary
 
+    def test_get_order_by_customer_id(self):
+        """It should Get an Order by Customer Id"""
+        orders = self._create_orders(10)
+        resp = self.client.get(BASE_URL, query_string=f"customer-id={orders[7].customer_id}")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data[0]["customer_id"], orders[7].customer_id)
+
     def test_create_order(self):
         """It should Create a new Order"""
         order = OrderFactory()

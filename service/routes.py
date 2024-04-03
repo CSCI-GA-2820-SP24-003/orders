@@ -19,7 +19,10 @@ Orders Service
 
 This service implements a REST API that allows you to manage Orders for a financial service.
 """
+import math
+
 from datetime import datetime
+
 from flask import jsonify
 
 from flask import request, url_for, abort
@@ -96,11 +99,14 @@ def delete_orders(order_id):
 ######################################################################
 @app.route("/orders", methods=["GET"])
 def list_orders():
-    """Returns all of the Orders within a date range if specified, sorted by order date."""
+    """Returns all Orders within a date range and total amount range if specified, sorted by order date or total amount."""
     app.logger.info("Request for Order list")
+
     start_date_str = request.args.get("order-start")
     end_date_str = request.args.get("order-end")
-    sort_by = request.args.get("sort_by")
+    total_min = request.args.get("total-min", default=0.0)
+    total_max = request.args.get("total-max", default=math.inf)
+    sort_by = request.args.get("sort_by", default="order_date")
 
     try:
         query = Order.query
@@ -108,17 +114,35 @@ def list_orders():
         if start_date_str:
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
             query = query.filter(Order.order_date >= start_date)
+
         if end_date_str:
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
             query = query.filter(Order.order_date <= end_date)
 
-        if sort_by == "order-date":
+        if total_min is not None and total_max is not None:
+            try:
+                total_min = float(total_min)
+                total_max = float(total_max)
+                query = query.filter(Order.total_amount.between(total_min, total_max))
+            except ValueError:
+                abort(
+                    status.HTTP_400_BAD_REQUEST,
+                    "Please enter valid minimum and maximum values. They should be decimal values.",
+                )
+
+        if sort_by == "order_date":
             query = query.order_by(Order.order_date.desc())
+        elif sort_by == "total_amount":
+            query = query.order_by(Order.total_amount.desc())
 
         orders = query.all()
         return jsonify([order.serialize() for order in orders]), status.HTTP_200_OK
+
     except ValueError:
-        abort(status.HTTP_400_BAD_REQUEST, "Parameter should be a date in 'YYYY-MM-DD' format.")
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "Parameter should be a date in 'YYYY-MM-DD' format.",
+        )
 
 
 ######################################################################
@@ -190,7 +214,10 @@ def cancel_order(order_id):
 
     # Abort Cancellation if order has been delivered
     if order.status in (OrderStatus.DELIVERED, OrderStatus.RETURNED):
-        abort(status.HTTP_409_CONFLICT, "Orders that have been delivered cannot be cancelled")
+        abort(
+            status.HTTP_409_CONFLICT,
+            "Orders that have been delivered cannot be cancelled",
+        )
 
     # Update from the json in the body of the request
     order.status = OrderStatus.CANCELLED
@@ -216,7 +243,7 @@ def get_items(order_id, item_id):
     if not item:
         abort(
             status.HTTP_404_NOT_FOUND,
-            f"Order with id '{item_id}' could not be found.",
+            f"Item with id '{item_id}' could not be found.",
         )
 
     return jsonify(item.serialize()), status.HTTP_200_OK
@@ -286,16 +313,13 @@ def add_item(order_id):
 
 
 ######################################################################
-# LIST ITEMS
+# LIST ITEMS BY NAME
 ######################################################################
-
-
 @app.route("/orders/<int:order_id>/items", methods=["GET"])
 def list_items(order_id):
     """Returns all of the Items for an Order"""
     app.logger.info("Request for all Items for Order with id: %s", order_id)
 
-    # See if the order exists and abort if it doesn't
     order = Order.find(order_id)
     if not order:
         abort(
@@ -303,9 +327,23 @@ def list_items(order_id):
             f"Order with id '{order_id}' could not be found.",
         )
 
-    # Get the items for the order
-    results = [item.serialize() for item in order.items]
+    items = order.items
 
+    product_id = request.args.get("product_id")
+    item_name = request.args.get("name")
+
+    if product_id:
+        product_id = int(product_id)
+        items = Item.find_by_product_id(product_id)
+        if not items:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                "Please enter valid product id.",
+            )
+    elif item_name:
+        items = Item.find_by_name(order_id, item_name)
+
+    results = [item.serialize() for item in items]
     return jsonify(results), status.HTTP_200_OK
 
 

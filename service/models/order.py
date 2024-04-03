@@ -17,7 +17,6 @@
 """
 Persistent Base class for database CRUD functions
 """
-from datetime import datetime
 import logging
 from enum import Enum
 from datetime import date
@@ -130,17 +129,58 @@ class Order(db.Model, PersistentBase):
     def find_by_date_range(start_date, end_date=None):
         """
         Finds orders within a specific date range.
-        
+
         Args:
-            start_date (date): The start date of the range to query for.
-            end_date (date): The end date of the range to query for. If None, queries for all orders from the start date to the current date.
-            
+            start_date: The start date of the range to query for.
+            end_date: The end date of the range to query for. If None, queries all orders from the start date to current.
+
         Returns:
             List[Order]: A list of orders within the specified date range.
         """
         logger.info("Querying for orders from %s to %s", start_date, end_date or "now")
-        
+
         query = Order.query.filter(Order.order_date >= start_date)
         if end_date:
             query = query.filter(Order.order_date <= end_date)
         return query.order_by(Order.order_date.desc()).all()
+
+    ##################################################
+    # CLASS METHODS
+    ##################################################
+
+    @classmethod
+    def find_by_total_amount(
+        cls, min_amount=0.0, max_amount=0.0, sort_by="total_amount"
+    ):
+        """Returns all Items with the given product_id
+
+        Args:
+            product_id (integer): the product_id of the Items you want to match
+        """
+        logger.info(
+            "Processing min = %s and max = %s amount (sorted by %s) query for orders ...",
+            min_amount,
+            max_amount,
+            sort_by,
+        )
+        if sort_by.lower() == "total_amount":
+            sort_criterion = cls.total_amount.desc()
+        return (
+            cls.query.filter(
+                cls.total_amount >= min_amount, cls.total_amount <= max_amount
+            )
+            .order_by(sort_criterion)
+            .all()
+        )
+
+    @classmethod
+    def find_by_status(cls, status: OrderStatus) -> list:
+        """Returns all Orders with a specific status
+
+        :param status: the status of the Orders you want to match
+        :type status: OrderStatus
+        :return: a collection of Orders with that status
+        :rtype: list
+        """
+        logger.info("Processing status query for %s ...", status.name)
+        return cls.query.filter(cls.status == status).all()

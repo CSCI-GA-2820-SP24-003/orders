@@ -5,8 +5,8 @@ TestYourResourceModel API Service Test Suite
 import os
 import logging
 from unittest import TestCase
-from service.models.order import OrderStatus
 from wsgi import app
+from service.models.order import OrderStatus
 from service.common import status
 from service.models import db, Order
 from tests.factories import OrderFactory, ItemFactory

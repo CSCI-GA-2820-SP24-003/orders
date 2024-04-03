@@ -97,6 +97,7 @@ def delete_orders(order_id):
 ######################################################################
 # LIST ALL ORDERS
 ######################################################################
+# flake8: noqa: C901
 @app.route("/orders", methods=["GET"])
 def list_orders():
     """Returns all Orders within a date range and total amount range if specified, sorted by order date or total amount."""
@@ -106,57 +107,63 @@ def list_orders():
     end_date_str = request.args.get("order-end")
     total_min = request.args.get("total-min", default=0.0)
     total_max = request.args.get("total-max", default=math.inf)
-    # customer_id = request.args.get("customer-id")
+    customer_id = request.args.get("customer-id")
     sort_by = request.args.get("sort_by", default="order_date")
 
-    try:
-        query = Order.query
+    # try:
+    query = Order.query
 
-        if start_date_str:
-            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
-            query = query.filter(Order.order_date >= start_date)
+    if start_date_str:
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+        query = query.filter(Order.order_date >= start_date)
 
-        if end_date_str:
-            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
-            query = query.filter(Order.order_date <= end_date)
+    if end_date_str:
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+        query = query.filter(Order.order_date <= end_date)
 
-        if total_min is not None and total_max is not None:
+    if total_min is not None and total_max is not None:
+        try:
+            total_min = float(total_min)
+            total_max = float(total_max)
+            query = query.filter(Order.total_amount.between(total_min, total_max))
+        except ValueError:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                "Please enter valid minimum and maximum values. They should be decimal values.",
+            )
+    if customer_id is not None:
+        try:
+            customer_id = [int(customer_id)]
+        except (TypeError, ValueError):
+            # print(f"inside second try----------------- {customer_id}")
             try:
-                total_min = float(total_min)
-                total_max = float(total_max)
-                query = query.filter(Order.total_amount.between(total_min, total_max))
-            except ValueError:
+                customer_id = customer_id.split(",")
+                customer_id = [int(c_id) for c_id in customer_id]
+            except (TypeError, ValueError):
                 abort(
                     status.HTTP_400_BAD_REQUEST,
-                    "Please enter valid minimum and maximum values. They should be decimal values.",
+                    f"{customer_id} is not a valid customer_id. Please enter an integer.",
                 )
 
-        if sort_by == "order_date":
-            query = query.order_by(Order.order_date.desc())
-        elif sort_by == "total_amount":
-            query = query.order_by(Order.total_amount.desc())
-        # if customer_id is not None:
-        #     try:
-        #         customer_id = [int(customer_id)]
-        #     except ValueError:
-        #         try:
-        #             customer_id = customer_id.split(",")
-        #             customer_id = [int(c_id) for c_id in customer_id]
-        #             orders = Order.find_by_customer_id(customer_id)
-        #         except ValueError:
-        #             abort(
-        #                 status.HTTP_400_BAD_REQUEST,
-        #                 f"{customer_id} is not a valid customer_id. Please enter an integer."
-        #             )
+        query = query.filter(Order.customer_id.in_(customer_id))
+        # print(query)
+        query_results = query.all()
+        print(f"----------------- {query_results}----------------- ")
 
-        orders = query.all()
-        return jsonify([order.serialize() for order in orders]), status.HTTP_200_OK
+        if not query_results:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                f"{customer_id} is not a valid customer_id. Please enter an integer.",
+            )
 
-    except ValueError:
-        abort(
-            status.HTTP_400_BAD_REQUEST,
-            "Parameter should be a date in 'YYYY-MM-DD' format.",
-        )
+    if sort_by == "order_date":
+        query = query.order_by(Order.order_date.desc())
+    elif sort_by == "total_amount":
+        query = query.order_by(Order.total_amount.desc())
+
+    orders = query.all()
+    print(orders)
+    return jsonify([order.serialize() for order in orders]), status.HTTP_200_OK
 
 
 ######################################################################

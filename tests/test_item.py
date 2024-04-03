@@ -192,3 +192,20 @@ class TestItem(TestCase):
         self.assertEqual(items[0].name, "ruler")
         self.assertEqual(items[0].quantity, 1)
         self.assertEqual(items[0].unit_price, 10.50)
+
+    def test_find_by_name(self):
+        """Find Items by Name"""
+        items = ItemFactory.create_batch(5)
+        for item in items:
+            item.create()
+
+        found = Item.find_by_name(items[0].order_id, items[0].name)
+        self.assertEqual(found[0].serialize(), items[0].serialize())
+
+        found = Item.find_by_name(items[0].order_id, items[0].name[:3])
+        self.assertGreaterEqual(len(found), 1)
+        for item in found:
+            self.assertTrue(items[0].name[:3].lower() in item.name.lower())
+
+        found = Item.find_by_name(items[0].order_id, "XYZ")
+        self.assertEqual(found, [])

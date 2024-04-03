@@ -85,3 +85,16 @@ class Item(db.Model, PersistentBase):
         logger.info("Processing product_id query for %s ...", product_id)
         # return Item.query.filter(Item.product_id == product_id)
         return cls.query.filter(cls.product_id == product_id).all()
+
+    @classmethod
+    def find_by_name(cls, order_id, name):
+        """Returns all Items with the given name
+
+        Args:
+            order_id (integer): the id of the Order
+            name (string): the name of the Items you want to match
+        """
+        logger.info("Processing name query for %s ...", name)
+        return cls.query.filter(
+            cls.order_id == order_id, cls.name.ilike(f"%{name}%")
+        ).all()

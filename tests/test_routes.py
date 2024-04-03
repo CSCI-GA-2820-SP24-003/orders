@@ -389,7 +389,6 @@ class TestOrderService(TestCase):
 
         orders = response.get_json()
         self.assertIsInstance(orders, list)
-        # 进一步的断言，确保返回的订单数据符合预期
 
     
 

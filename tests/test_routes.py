@@ -337,6 +337,63 @@ class TestOrderService(TestCase):
         response = self.client.get(f"{BASE_URL}/{test_order.id}")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_query_orders_by_total_amount(self):
+        """It should sort and filter orders in a particular range based on the total amount."""
+
+        for i in range(5):
+            total_amount = 30.0 + i * 10
+            order = OrderFactory(total_amount=total_amount)
+            order.create()
+
+        sorting_criterion = "total_amount"
+
+        # checking with only minimum value.
+        minimum = 60
+        resp = self.client.get(
+            f"{BASE_URL}?total-min={minimum}&sort_by={sorting_criterion}"
+        )
+        orders = resp.get_json()
+        self.assertIsInstance(orders, list)
+        self.assertEqual(len(orders), 2)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # checking with only maximum value.
+        maximum = 60
+        resp = self.client.get(
+            f"{BASE_URL}?total-max={maximum}&sort_by={sorting_criterion}"
+        )
+        orders = resp.get_json()
+        self.assertIsInstance(orders, list)
+        self.assertEqual(len(orders), 4)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        #  checking with both minimum and maximum values.
+        minimum = 40
+        maximum = 60
+        resp = self.client.get(
+            f"{BASE_URL}?total-min={minimum}&total-max={maximum}&sort_by={sorting_criterion}"
+        )
+        orders = resp.get_json()
+        self.assertIsInstance(orders, list)
+        self.assertEqual(len(orders), 3)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_query_orders_by_total_amount_bad_request(self):
+        """It should sort and filter orders in a particular range based on the total amount. (BAD REQUEST)."""
+        for i in range(5):
+            total_amount = 30.0 + i * 10
+            order = OrderFactory(total_amount=total_amount)
+            order.create()
+
+        sorting_criterion = "total_amount"
+
+        minimum = "abc"
+        maximum = 60
+        resp = self.client.get(
+            f"{BASE_URL}?total-min={minimum}&total-max={maximum}&sort_by={sorting_criterion}"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_bad_request(self):
         """It should not Create when sending the wrong data"""
         resp = self.client.post(BASE_URL, json={"name": "not enough data"})

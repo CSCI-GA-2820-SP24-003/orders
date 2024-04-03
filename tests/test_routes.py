@@ -344,6 +344,13 @@ class TestOrderService(TestCase):
         resp = self.client.post(BASE_URL, json=test_order.serialize())
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
+        # set status to started
+        new_order = resp.get_json()
+        new_order["status"] = "STARTED"
+        order_id = new_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=new_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
         # Pack a Started Order
         started_order = resp.get_json()
         order_id = started_order["id"]

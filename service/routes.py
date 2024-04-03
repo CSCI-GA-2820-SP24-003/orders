@@ -248,6 +248,62 @@ def cancel_order(order_id):
 
 
 ######################################################################
+# PACK AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/packing", methods=["PUT"])
+def pack_orders(order_id):
+    """Pack the Order that has not being shipped yet"""
+    app.logger.info("Request to pack order with id: %s", order_id)
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Orders with id {order_id} not found. Please enter a valid order id.",
+        )
+
+    # abort if invalid order status
+    # print(order.status)
+    if order.status not in (OrderStatus.STARTED, OrderStatus.PACKING):
+        abort(
+            status.HTTP_409_CONFLICT,
+            f"Orders that have been {order.status} cannot be set to PACKING ",
+        )
+
+    order.status = OrderStatus.PACKING
+    order.update()
+
+    return jsonify(order.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# DELIVER AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/deliver", methods=["PUT"])
+def deliver_orders(order_id):
+    """deliver the Order that has been shipped"""
+    app.logger.info("Request to deliver order with id: %s", order_id)
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Orders with id {order_id} not found. Please enter a valid order id.",
+        )
+
+    # abort if invalid order status
+    # print(order.status)
+    if order.status not in (OrderStatus.SHIPPING, OrderStatus.DELIVERED):
+        abort(
+            status.HTTP_409_CONFLICT,
+            f"Orders in {order.status} cannot be delivered.",
+        )
+
+    order.status = OrderStatus.DELIVERED
+    order.update()
+
+    return jsonify(order.serialize()), status.HTTP_200_OK
+
+
+######################################################################
 # GET A SINGLE ITEM IN AN ORDER
 ######################################################################
 @app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["GET"])
@@ -395,6 +451,33 @@ def update_items(order_id, item_id):
     item.update()
 
     return jsonify(item.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# SHIP AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/ship", methods=["PUT"])
+def ship_orders(order_id):
+    """Ship all the items of the Order that have not being shipped yet"""
+    app.logger.info("Request to ship order with id: %s", order_id)
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' could not be found.",
+        )
+
+    print(order.status)
+    if order.status not in [OrderStatus.CANCELLED, OrderStatus.DELIVERED]:
+        order.status = OrderStatus.SHIPPING
+        order.update()
+    else:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            f"Order with id '{order_id}' has been DELIVERED/CANCELLED",
+        )
+
+    return jsonify(order.serialize()), status.HTTP_200_OK
 
 
 ######################################################################

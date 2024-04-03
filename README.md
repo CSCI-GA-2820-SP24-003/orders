@@ -75,6 +75,7 @@ create_orders     POST     /orders
 get_orders        GET      /orders/<order_id>
 update_orders     PUT      /orders/<order_id>
 delete_orders     DELETE   /orders/<order_id>
+ship_orders       PUT      /orders/<order_id>/ship
 cancel_orders     PUT      /orders/<order_id>/cancel
 pack_orders       PUT      /orders/<order_id>/packing
 

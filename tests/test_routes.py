@@ -6,6 +6,7 @@ import os
 import logging
 from unittest import TestCase
 from wsgi import app
+from service.models.order import OrderStatus
 from service.common import status
 from service.models import db, Order
 from tests.factories import OrderFactory, ItemFactory
@@ -326,6 +327,38 @@ class TestOrderService(TestCase):
         order_id = started_order["id"] + 1
         resp = self.client.put(f"{BASE_URL}/{order_id}/cancel", json=started_order)
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_ship_order(self):
+        """Ship an order"""
+        order = self._create_orders(1)[0]
+        order.status = OrderStatus.PACKING
+        resp = self.client.put(f"/orders/{order.id}", json=order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        resp = self.client.put(f"/orders/{order.id}/ship")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_ship_order_not_found(self):
+        """Ship an order when order does not exist"""
+        resp = self.client.put("/orders/0/ship")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_ship_order_with_canceled_order(self):
+        """Ship an order with cancelled order"""
+        order = self._create_orders(1)[0]
+        order.status = OrderStatus.CANCELLED
+        resp = self.client.put(f"/orders/{order.id}", json=order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        resp = self.client.put(f"/orders/{order.id}/ship")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_ship_order_with_delivered_order(self):
+        """Ship an order with delivered order"""
+        order = self._create_orders(1)[0]
+        order.status = OrderStatus.DELIVERED
+        resp = self.client.put(f"/orders/{order.id}", json=order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        resp = self.client.put(f"/orders/{order.id}/ship")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_delete_order(self):
         """It should Delete a Order"""

@@ -19,6 +19,7 @@ Orders Service
 
 This service implements a REST API that allows you to manage Orders for a financial service.
 """
+import math
 
 from flask import jsonify
 
@@ -102,6 +103,26 @@ def list_orders():
 
     orders = Order.all()
 
+    total_min = request.args.get("total-min", default=0.0)
+    print(type(total_min))
+    total_max = request.args.get("total-max", default=math.inf)  # , type=float)
+    print(type(total_max))
+    customer_id = request.args.get("customer-id")
+    print(type(customer_id))
+
+    sort_by = request.args.get("sort_by")
+
+    if sort_by == "total_amount":
+        try:
+            total_min = float(total_min)
+            total_max = float(total_max)
+            orders = Order.find_by_total_amount(total_min, total_max, sort_by)
+        except ValueError:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                "Please enter valid Minimum value. It should be a decimal value.",
+            )
+
     # Return as an array of dictionaries
     results = [order.serialize() for order in orders]
 
@@ -177,7 +198,10 @@ def cancel_order(order_id):
 
     # Abort Cancellation if order has been delivered
     if order.status in (OrderStatus.DELIVERED, OrderStatus.RETURNED):
-        abort(status.HTTP_409_CONFLICT, "Orders that have been delivered cannot be cancelled")
+        abort(
+            status.HTTP_409_CONFLICT,
+            "Orders that have been delivered cannot be cancelled",
+        )
 
     # Update from the json in the body of the request
     order.status = OrderStatus.CANCELLED
@@ -203,7 +227,7 @@ def get_items(order_id, item_id):
     if not item:
         abort(
             status.HTTP_404_NOT_FOUND,
-            f"Order with id '{item_id}' could not be found.",
+            f"Item with id '{item_id}' could not be found.",
         )
 
     return jsonify(item.serialize()), status.HTTP_200_OK
@@ -273,16 +297,13 @@ def add_item(order_id):
 
 
 ######################################################################
-# LIST ITEMS
+# LIST ITEMS BY NAME
 ######################################################################
-
-
 @app.route("/orders/<int:order_id>/items", methods=["GET"])
 def list_items(order_id):
     """Returns all of the Items for an Order"""
     app.logger.info("Request for all Items for Order with id: %s", order_id)
 
-    # See if the order exists and abort if it doesn't
     order = Order.find(order_id)
     if not order:
         abort(
@@ -290,9 +311,23 @@ def list_items(order_id):
             f"Order with id '{order_id}' could not be found.",
         )
 
-    # Get the items for the order
-    results = [item.serialize() for item in order.items]
+    items = order.items
 
+    product_id = request.args.get("product_id")
+    item_name = request.args.get("name")
+
+    if product_id:
+        product_id = int(product_id)
+        items = Item.find_by_product_id(product_id)
+        if not items:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                "Please enter valid product id.",
+            )
+    elif item_name:
+        items = Item.find_by_name(order_id, item_name)
+
+    results = [item.serialize() for item in items]
     return jsonify(results), status.HTTP_200_OK
 
 

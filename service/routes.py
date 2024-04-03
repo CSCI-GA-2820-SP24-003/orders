@@ -377,6 +377,33 @@ def update_items(order_id, item_id):
 
 
 ######################################################################
+# SHIP AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/ship", methods=["PUT"])
+def ship_orders(order_id):
+    """Ship all the items of the Order that have not being shipped yet"""
+    app.logger.info("Request to ship order with id: %s", order_id)
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' could not be found.",
+        )
+
+    print(order.status)
+    if order.status not in [OrderStatus.CANCELLED, OrderStatus.DELIVERED]:
+        order.status = OrderStatus.SHIPPING
+        order.update()
+    else:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            f"Order with id '{order_id}' has been DELIVERED/CANCELLED",
+        )
+
+    return jsonify(order.serialize()), status.HTTP_200_OK
+
+
+######################################################################
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
 

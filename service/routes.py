@@ -101,6 +101,8 @@ def list_orders():
     app.logger.info("Request for Order list")
     orders = []
 
+    orders = Order.all()
+
     total_min = request.args.get("total-min", default=0.0)
     print(type(total_min))
     total_max = request.args.get("total-max", default=math.inf)  # , type=float)
@@ -117,8 +119,8 @@ def list_orders():
                 status.HTTP_400_BAD_REQUEST,
                 "Please enter valid Minimum value. It should be a decimal value.",
             )
-    else:
-        orders = Order.all()
+    # else:
+    #     orders = Order.all()
 
     # Return as an array of dictionaries
     results = [order.serialize() for order in orders]

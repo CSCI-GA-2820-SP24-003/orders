@@ -131,6 +131,31 @@ class Order(db.Model, PersistentBase):
     ##################################################
 
     @classmethod
+    def find_by_total_amount(
+        cls, min_amount=0.0, max_amount=0.0, sort_by="total_amount"
+    ):
+        """Returns all Items with the given product_id
+
+        Args:
+            product_id (integer): the product_id of the Items you want to match
+        """
+        logger.info(
+            "Processing min = %s and max = %s amount (sorted by %s) query for orders ...",
+            min_amount,
+            max_amount,
+            sort_by,
+        )
+        if sort_by.lower() == "total_amount":
+            sort_criterion = cls.total_amount.desc()
+        return (
+            cls.query.filter(
+                cls.total_amount >= min_amount, cls.total_amount <= max_amount
+            )
+            .order_by(sort_criterion)
+            .all()
+        )
+
+    @classmethod
     def find_by_status(cls, status: OrderStatus) -> list:
         """Returns all Orders with a specific status
 

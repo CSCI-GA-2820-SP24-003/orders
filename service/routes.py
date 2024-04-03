@@ -19,6 +19,7 @@ Orders Service
 
 This service implements a REST API that allows you to manage Orders for a financial service.
 """
+import math
 
 from flask import jsonify
 
@@ -101,6 +102,25 @@ def list_orders():
     orders = []
 
     orders = Order.all()
+
+    total_min = request.args.get("total-min", default=0.0)
+    print(type(total_min))
+    total_max = request.args.get("total-max", default=math.inf)  # , type=float)
+    print(type(total_max))
+    sort_by = request.args.get("sort_by", default="total_amount")
+
+    if total_min is not None and total_max is not None and sort_by is not None:
+        try:
+            total_min = float(total_min)
+            total_max = float(total_max)
+            orders = Order.find_by_total_amount(total_min, total_max, sort_by)
+        except ValueError:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                "Please enter valid Minimum value. It should be a decimal value.",
+            )
+    # else:
+    #     orders = Order.all()
 
     # Return as an array of dictionaries
     results = [order.serialize() for order in orders]

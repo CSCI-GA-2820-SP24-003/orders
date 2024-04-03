@@ -280,3 +280,25 @@ class TestModelQueries(TestCaseBase):
         packing_orders = Order.find_by_status(OrderStatus.PACKING)
         self.assertEqual(len(packing_orders), 1)
         self.assertEqual(packing_orders[0].id, orders[1].id)
+
+    def test_find_by_total_amount(self):
+        """filter and sort orders by total amount"""
+
+        OrderFactory(total_amount=30.0).create()
+        OrderFactory(total_amount=20.0).create()
+        OrderFactory(total_amount=50.0).create()
+        OrderFactory(total_amount=10.0).create()
+        OrderFactory(total_amount=40.0).create()
+
+        orders = Order.find_by_total_amount(
+            min_amount=15.0, max_amount=40.0, sort_by="total_amount"
+        )
+        # Check length
+        self.assertEqual(len(orders), 3)
+        # Check range
+        self.assertGreaterEqual(orders[0].total_amount, 15)
+        self.assertLessEqual(orders[0].total_amount, 40)
+        # Check Order
+        self.assertEqual(orders[0].total_amount, 40)
+        self.assertEqual(orders[1].total_amount, 30)
+        self.assertEqual(orders[2].total_amount, 20)

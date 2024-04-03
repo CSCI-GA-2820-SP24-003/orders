@@ -19,6 +19,7 @@ Orders Service
 
 This service implements a REST API that allows you to manage Orders for a financial service.
 """
+import math
 
 from flask import jsonify
 
@@ -28,8 +29,6 @@ from flask import current_app as app  # Import Flask application
 from service.models import Order, Item
 from service.models.order import OrderStatus
 from service.common import status  # HTTP Status Codes
-
-import math
 
 
 ######################################################################
@@ -102,18 +101,22 @@ def list_orders():
     app.logger.info("Request for Order list")
     orders = []
 
-    total_min = request.args.get("total-min")
-    total_max = request.args.get("total-max")
-    sort_by = request.args.get("sort_by")
+    total_min = request.args.get("total-min", default=0.0)
+    print(type(total_min))
+    total_max = request.args.get("total-max", default=math.inf)  # , type=float)
+    print(type(total_max))
+    sort_by = request.args.get("sort_by", default="total_amount")
 
     if total_min is not None and total_max is not None and sort_by is not None:
-        orders = Order.find_by_total_amount(total_min, total_max, sort_by)
-    elif total_min is not None and total_max is None:
-        total_max = math.inf
-        orders = Order.find_by_total_amount(total_min, total_max, sort_by)
-    elif total_min is None and total_max is not None:
-        total_min = 0.0
-        orders = Order.find_by_total_amount(total_min, total_max, sort_by)
+        try:
+            total_min = float(total_min)
+            total_max = float(total_max)
+            orders = Order.find_by_total_amount(total_min, total_max, sort_by)
+        except ValueError:
+            abort(
+                status.HTTP_400_BAD_REQUEST,
+                "Please enter valid Minimum value. It should be a decimal value.",
+            )
     else:
         orders = Order.all()
 
@@ -121,17 +124,6 @@ def list_orders():
     results = [order.serialize() for order in orders]
 
     return jsonify(results), status.HTTP_200_OK
-
-
-# ######################################################################
-# # Query parameters validity check helper function
-# ######################################################################
-# def Convert_to_float(min, max):
-#     try:
-#         min = float(min)
-#         max = float(max)
-#     except ValueError:
-#         return None
 
 
 ######################################################################

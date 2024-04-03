@@ -348,7 +348,7 @@ class TestOrderService(TestCase):
         sorting_criterion = "total_amount"
 
         # checking with only minimum value.
-        minimum = 60
+        minimum = 60.0
         resp = self.client.get(
             f"{BASE_URL}?total-min={minimum}&sort_by={sorting_criterion}"
         )
@@ -358,7 +358,7 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         # checking with only maximum value.
-        maximum = 60
+        maximum = 60.0
         resp = self.client.get(
             f"{BASE_URL}?total-max={maximum}&sort_by={sorting_criterion}"
         )
@@ -368,8 +368,8 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         #  checking with both minimum and maximum values.
-        minimum = 40
-        maximum = 60
+        minimum = 40.0
+        maximum = 60.0
         resp = self.client.get(
             f"{BASE_URL}?total-min={minimum}&total-max={maximum}&sort_by={sorting_criterion}"
         )
@@ -388,7 +388,7 @@ class TestOrderService(TestCase):
         sorting_criterion = "total_amount"
 
         minimum = "abc"
-        maximum = 60
+        maximum = 60.0
         resp = self.client.get(
             f"{BASE_URL}?total-min={minimum}&total-max={maximum}&sort_by={sorting_criterion}"
         )

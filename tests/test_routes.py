@@ -337,6 +337,90 @@ class TestOrderService(TestCase):
         response = self.client.get(f"{BASE_URL}/{test_order.id}")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_pack_order_success(self):
+        """It should pack an Order that isn't shipped yet"""
+        # Create an Order to pack
+        test_order = OrderFactory()
+        resp = self.client.post(BASE_URL, json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Pack a Started Order
+        started_order = resp.get_json()
+        order_id = started_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{order_id}/packing")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated_order = resp.get_json()
+        self.assertEqual(updated_order["status"], "PACKING")
+
+        # pack a PACKING Order (testing idempotence)
+        resp = self.client.put(f"{BASE_URL}/{order_id}/packing")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        repacked_order = resp.get_json()
+        self.assertEqual(repacked_order["status"], "PACKING")
+
+    def test_pack_order_failure(self):
+        """It should pack an Order that isn't shipped yet"""
+        # Create an Order to pack
+        test_order = OrderFactory()
+        resp = self.client.post(BASE_URL, json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # update order to shipping
+        new_order = resp.get_json()
+        new_order["status"] = "SHIPPING"
+        order_id = new_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=new_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Pack a shipped Order
+        shipped_order = resp.get_json()
+        order_id = shipped_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{order_id}/packing")
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+
+        # Update the Order to DELIVERED
+        shipped_order["status"] = "DELIVERED"
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=shipped_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # pack a delivered order
+        delivered_order = resp.get_json()
+        resp = self.client.put(f"{BASE_URL}/{order_id}/packing")
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+
+        # update order to CANCELLED
+        delivered_order["status"] = "CANCELLED"
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=delivered_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # pack a cancelled order
+        # cancelled_order = resp.get_json()
+        resp = self.client.put(f"{BASE_URL}/{order_id}/packing")
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+
+        # update order to returned
+        delivered_order["status"] = "RETURNED"
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=delivered_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # pack a cancelled order
+        # returned_order = resp.get_json()
+        resp = self.client.put(f"{BASE_URL}/{order_id}/packing")
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+
+    def test_pack_nonexistent_order(self):
+        """It should not Pack an Order that doesn't exist"""
+        # Create an Order to pack
+        test_order = OrderFactory()
+        resp = self.client.post(BASE_URL, json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Fail to pack a nonexistent Order
+        started_order = resp.get_json()
+        order_id = started_order["id"] + 1
+        resp = self.client.put(f"{BASE_URL}/{order_id}/packing", json=started_order)
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_query_orders_by_total_amount(self):
         """It should sort and filter orders in a particular range based on the total amount."""
 

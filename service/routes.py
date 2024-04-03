@@ -227,6 +227,34 @@ def cancel_order(order_id):
 
 
 ######################################################################
+# PACK AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/packing", methods=["PUT"])
+def pack_orders(order_id):
+    """Pack the Order that has not being shipped yet"""
+    app.logger.info("Request to pack order with id: %s", order_id)
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Orders with id {order_id} not found. Please enter a valid order id.",
+        )
+
+    # abort if invalid order status
+    # print(order.status)
+    if order.status not in (OrderStatus.STARTED, OrderStatus.PACKING):
+        abort(
+            status.HTTP_409_CONFLICT,
+            f"Orders that have been {order.status} cannot be set to PACKING ",
+        )
+
+    order.status = OrderStatus.PACKING
+    order.update()
+
+    return jsonify(order.serialize()), status.HTTP_200_OK
+
+
+######################################################################
 # GET A SINGLE ITEM IN AN ORDER
 ######################################################################
 @app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["GET"])

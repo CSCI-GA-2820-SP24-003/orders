@@ -17,7 +17,6 @@
 """
 Persistent Base class for database CRUD functions
 """
-
 import logging
 from enum import Enum
 from datetime import date
@@ -125,6 +124,25 @@ class Order(db.Model, PersistentBase):
             ) from error
 
         return self
+
+    @staticmethod
+    def find_by_date_range(start_date, end_date=None):
+        """
+        Finds orders within a specific date range.
+
+        Args:
+            start_date: The start date of the range to query for.
+            end_date: The end date of the range to query for. If None, queries all orders from the start date to current.
+
+        Returns:
+            List[Order]: A list of orders within the specified date range.
+        """
+        logger.info("Querying for orders from %s to %s", start_date, end_date or "now")
+
+        query = Order.query.filter(Order.order_date >= start_date)
+        if end_date:
+            query = query.filter(Order.order_date <= end_date)
+        return query.order_by(Order.order_date.desc()).all()
 
     ##################################################
     # CLASS METHODS

@@ -21,6 +21,8 @@ This service implements a REST API that allows you to manage Orders for a financ
 """
 import math
 
+from datetime import datetime
+
 from flask import jsonify
 
 from flask import request, url_for, abort
@@ -97,35 +99,50 @@ def delete_orders(order_id):
 ######################################################################
 @app.route("/orders", methods=["GET"])
 def list_orders():
-    """Returns all of the Orders"""
+    """Returns all Orders within a date range and total amount range if specified, sorted by order date or total amount."""
     app.logger.info("Request for Order list")
-    orders = []
 
-    orders = Order.all()
-
+    start_date_str = request.args.get("order-start")
+    end_date_str = request.args.get("order-end")
     total_min = request.args.get("total-min", default=0.0)
-    print(type(total_min))
-    total_max = request.args.get("total-max", default=math.inf)  # , type=float)
-    print(type(total_max))
-    sort_by = request.args.get("sort_by", default="total_amount")
+    total_max = request.args.get("total-max", default=math.inf)
+    sort_by = request.args.get("sort_by", default="order_date")
 
-    if total_min is not None and total_max is not None and sort_by is not None:
-        try:
-            total_min = float(total_min)
-            total_max = float(total_max)
-            orders = Order.find_by_total_amount(total_min, total_max, sort_by)
-        except ValueError:
-            abort(
-                status.HTTP_400_BAD_REQUEST,
-                "Please enter valid Minimum value. It should be a decimal value.",
-            )
-    # else:
-    #     orders = Order.all()
+    try:
+        query = Order.query
 
-    # Return as an array of dictionaries
-    results = [order.serialize() for order in orders]
+        if start_date_str:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            query = query.filter(Order.order_date >= start_date)
 
-    return jsonify(results), status.HTTP_200_OK
+        if end_date_str:
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+            query = query.filter(Order.order_date <= end_date)
+
+        if total_min is not None and total_max is not None:
+            try:
+                total_min = float(total_min)
+                total_max = float(total_max)
+                query = query.filter(Order.total_amount.between(total_min, total_max))
+            except ValueError:
+                abort(
+                    status.HTTP_400_BAD_REQUEST,
+                    "Please enter valid minimum and maximum values. They should be decimal values.",
+                )
+
+        if sort_by == "order_date":
+            query = query.order_by(Order.order_date.desc())
+        elif sort_by == "total_amount":
+            query = query.order_by(Order.total_amount.desc())
+
+        orders = query.all()
+        return jsonify([order.serialize() for order in orders]), status.HTTP_200_OK
+
+    except ValueError:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "Parameter should be a date in 'YYYY-MM-DD' format.",
+        )
 
 
 ######################################################################

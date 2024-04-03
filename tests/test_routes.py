@@ -347,6 +347,20 @@ class TestOrderService(TestCase):
 
         sorting_criterion = "total_amount"
 
+        # Checking without any query.
+        resp = self.client.get(f"{BASE_URL}")
+        orders = resp.get_json()
+        self.assertIsInstance(orders, list)
+        self.assertEqual(len(orders), 5)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Checking without any minimum or maximum value or sorting value.
+        resp = self.client.get(f"{BASE_URL}?sort_by={sorting_criterion}")
+        orders = resp.get_json()
+        self.assertIsInstance(orders, list)
+        self.assertEqual(len(orders), 5)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
         # checking with only minimum value.
         minimum = 60.0
         resp = self.client.get(

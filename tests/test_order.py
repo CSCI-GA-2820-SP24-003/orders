@@ -21,8 +21,8 @@ Test cases for Order Model
 import logging
 import os
 from unittest import TestCase
-
 from unittest.mock import patch
+from datetime import datetime, timedelta
 from service.models.order import OrderStatus
 from service.models import Order, Item, DataValidationError, db
 
@@ -234,6 +234,32 @@ class TestOrder(TestCase):
         exception_mock.side_effect = Exception()
         order = OrderFactory()
         self.assertRaises(DataValidationError, order.update)
+
+    def test_find_by_date_range(self):
+        """Test finding orders by date range."""
+        logging.info(
+            "Creating orders with various dates for testing the date range query."
+        )
+
+        order1 = OrderFactory(order_date=datetime.now().date() - timedelta(days=15))
+        order2 = OrderFactory(order_date=datetime.now().date() - timedelta(days=10))
+        order3 = OrderFactory(order_date=datetime.now().date() - timedelta(days=5))
+        db.session.add_all([order1, order2, order3])
+        db.session.commit()
+
+        start_date = datetime.now().date() - timedelta(days=12)
+        end_date = datetime.now().date() - timedelta(days=6)
+
+        orders = Order.find_by_date_range(start_date, end_date)
+
+        self.assertTrue(
+            len(orders) >= 1, "Should find at least one order in the date range"
+        )
+        for order in orders:
+            self.assertTrue(
+                start_date <= order.order_date <= end_date,
+                "Order date is outside the specified range",
+            )
 
 
 ######################################################################

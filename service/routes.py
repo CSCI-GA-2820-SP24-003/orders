@@ -255,6 +255,34 @@ def pack_orders(order_id):
 
 
 ######################################################################
+# DELIVER AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>/deliver", methods=["PUT"])
+def deliver_orders(order_id):
+    """deliver the Order that has been shipped"""
+    app.logger.info("Request to deliver order with id: %s", order_id)
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Orders with id {order_id} not found. Please enter a valid order id.",
+        )
+
+    # abort if invalid order status
+    # print(order.status)
+    if order.status not in (OrderStatus.SHIPPING, OrderStatus.DELIVERED):
+        abort(
+            status.HTTP_409_CONFLICT,
+            f"Orders in {order.status} cannot be delivered.",
+        )
+
+    order.status = OrderStatus.DELIVERED
+    order.update()
+
+    return jsonify(order.serialize()), status.HTTP_200_OK
+
+
+######################################################################
 # GET A SINGLE ITEM IN AN ORDER
 ######################################################################
 @app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["GET"])

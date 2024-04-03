@@ -150,3 +150,19 @@ class Order(db.Model, PersistentBase):
             .order_by(sort_criterion)
             .all()
         )
+
+    ##################################################
+    # CLASS METHODS
+    ##################################################
+
+    @classmethod
+    def find_by_status(cls, status: OrderStatus) -> list:
+        """Returns all Orders with a specific status
+
+        :param status: the status of the Orders you want to match
+        :type status: OrderStatus
+        :return: a collection of Orders with that status
+        :rtype: list
+        """
+        logger.info("Processing status query for %s ...", status.name)
+        return cls.query.filter(cls.status == status).all()

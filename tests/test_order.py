@@ -23,9 +23,10 @@ import os
 from unittest import TestCase
 
 from unittest.mock import patch
+from service.models.order import OrderStatus
+from service.models import Order, Item, DataValidationError, db
 
 from wsgi import app
-from service.models import Order, Item, DataValidationError, db
 from tests.factories import OrderFactory, ItemFactory
 
 DATABASE_URI = os.getenv(
@@ -269,3 +270,35 @@ class TestExceptionHandlers(TestCaseBase):
         exception_mock.side_effect = Exception()
         order = OrderFactory()
         self.assertRaises(DataValidationError, order.delete)
+
+
+######################################################################
+#  Q U E R Y   T E S T   C A S E S
+######################################################################
+
+
+class TestModelQueries(TestCaseBase):
+    """Order Model Query Tests"""
+
+    def test_query_orders_by_status(self):
+        """Test querying orders by status."""
+        orders = OrderFactory.create_batch(5, status=OrderStatus.STARTED)
+        for order in orders:
+            order.create()
+        logging.debug(orders)
+        # make sure they got saved
+        self.assertEqual(len(Order.all()), 5)
+        # find orders with status "STARTED"
+        started_orders = Order.find_by_status(OrderStatus.STARTED)
+        self.assertEqual(len(started_orders), 5)
+        for order in started_orders:
+            self.assertEqual(order.status, OrderStatus.STARTED)
+
+        # change status of the 2nd order to "PACKING"
+        orders[1].status = OrderStatus.PACKING
+        orders[1].update()
+
+        # find orders with status "PACKING"
+        packing_orders = Order.find_by_status(OrderStatus.PACKING)
+        self.assertEqual(len(packing_orders), 1)
+        self.assertEqual(packing_orders[0].id, orders[1].id)

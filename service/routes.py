@@ -123,6 +123,20 @@ def list_orders():
                 "Please enter valid Minimum value. It should be a decimal value.",
             )
 
+    if customer_id is not None:
+        try:
+            customer_id = [int(customer_id)]
+        except ValueError:
+            try:
+                customer_id = customer_id.split(",")
+                customer_id = [int(c_id) for c_id in customer_id]
+                orders = Order.find_by_customer_id(customer_id)
+            except ValueError:
+                abort(
+                    status.HTTP_400_BAD_REQUEST,
+                    f"{customer_id} is not a valid customer_id. Please enter an integer."
+                )
+
     # Return as an array of dictionaries
     results = [order.serialize() for order in orders]
 

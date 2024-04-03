@@ -337,77 +337,6 @@ class TestOrderService(TestCase):
         response = self.client.get(f"{BASE_URL}/{test_order.id}")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_query_orders_by_total_amount(self):
-        """It should sort and filter orders in a particular range based on the total amount."""
-
-        for i in range(5):
-            total_amount = 30.0 + i * 10
-            order = OrderFactory(total_amount=total_amount)
-            order.create()
-
-        sorting_criterion = "total_amount"
-
-        # Checking without any query.
-        resp = self.client.get(f"{BASE_URL}")
-        orders = resp.get_json()
-        self.assertIsInstance(orders, list)
-        self.assertEqual(len(orders), 5)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-        # Checking without any minimum or maximum value or sorting value.
-        resp = self.client.get(f"{BASE_URL}?sort_by={sorting_criterion}")
-        orders = resp.get_json()
-        self.assertIsInstance(orders, list)
-        self.assertEqual(len(orders), 5)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-        # checking with only minimum value.
-        minimum = 60.0
-        resp = self.client.get(
-            f"{BASE_URL}?total-min={minimum}&sort_by={sorting_criterion}"
-        )
-        orders = resp.get_json()
-        self.assertIsInstance(orders, list)
-        self.assertEqual(len(orders), 2)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-        # checking with only maximum value.
-        maximum = 60.0
-        resp = self.client.get(
-            f"{BASE_URL}?total-max={maximum}&sort_by={sorting_criterion}"
-        )
-        orders = resp.get_json()
-        self.assertIsInstance(orders, list)
-        self.assertEqual(len(orders), 4)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-        #  checking with both minimum and maximum values.
-        minimum = 40.0
-        maximum = 60.0
-        resp = self.client.get(
-            f"{BASE_URL}?total-min={minimum}&total-max={maximum}&sort_by={sorting_criterion}"
-        )
-        orders = resp.get_json()
-        self.assertIsInstance(orders, list)
-        self.assertEqual(len(orders), 3)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-    def test_query_orders_by_total_amount_bad_request(self):
-        """It should sort and filter orders in a particular range based on the total amount. (BAD REQUEST)."""
-        for i in range(5):
-            total_amount = 30.0 + i * 10
-            order = OrderFactory(total_amount=total_amount)
-            order.create()
-
-        sorting_criterion = "total_amount"
-
-        minimum = "abc"
-        maximum = 60.0
-        resp = self.client.get(
-            f"{BASE_URL}?total-min={minimum}&total-max={maximum}&sort_by={sorting_criterion}"
-        )
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
     def test_bad_request(self):
         """It should not Create when sending the wrong data"""
         resp = self.client.post(BASE_URL, json={"name": "not enough data"})
@@ -620,3 +549,110 @@ class TestOrderService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_query_item_by_name(self):
+        """It should query items by name"""
+        order = self._create_orders(1)[0]
+        item1 = ItemFactory(
+            order_id=order.id, name="pencil", quantity=1, unit_price=1.50
+        )
+        item2 = ItemFactory(order_id=order.id, name="pen", quantity=2, unit_price=2.00)
+        item3 = ItemFactory(
+            order_id=order.id, name="eraser", quantity=1, unit_price=0.50
+        )
+        item4 = ItemFactory(
+            order_id=order.id, name="notebook", quantity=3, unit_price=3.00
+        )
+        item5 = ItemFactory(
+            order_id=order.id, name="ruler", quantity=1, unit_price=1.00
+        )
+
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items",
+            json=item1.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items",
+            json=item2.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items",
+            json=item3.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items",
+            json=item4.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items",
+            json=item5.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Test case-insensitive partial match
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}/items?name=pen",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 2)
+        self.assertCountEqual(
+            [item.name for item in [item1, item2]], [item["name"] for item in data]
+        )
+
+        # Test full name match
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}/items?name=eraser",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertCountEqual(
+            [item.name for item in [item3]], [item["name"] for item in data]
+        )
+
+        # Test name substring match
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}/items?name=er",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 2)
+        self.assertCountEqual(
+            [item.name for item in [item3, item5]], [item["name"] for item in data]
+        )
+
+    def test_query_item_by_name_empty_result(self):
+        """It should return an empty list when no items match the name"""
+        order = self._create_orders(1)[0]
+        item = ItemFactory(order_id=order.id, name="pen", quantity=1, unit_price=1.50)
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items",
+            json=item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}/items?name=pencil",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data, [])

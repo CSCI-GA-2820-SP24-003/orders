@@ -19,7 +19,6 @@ Orders Service
 
 This service implements a REST API that allows you to manage Orders for a financial service.
 """
-import math
 
 from flask import jsonify
 
@@ -296,39 +295,37 @@ def add_item(order_id):
 
 
 ######################################################################
-# LIST ITEMS
+# LIST ITEMS BY NAME
 ######################################################################
-
-
 @app.route("/orders/<int:order_id>/items", methods=["GET"])
 def list_items(order_id):
     """Returns all of the Items for an Order"""
     app.logger.info("Request for all Items for Order with id: %s", order_id)
 
-    # product_id = request.args.get("product_id", -1)
-    # See if the order exists and abort if it doesn't
     order = Order.find(order_id)
     if not order:
         abort(
             status.HTTP_404_NOT_FOUND,
             f"Order with id '{order_id}' could not be found.",
         )
+
     items = order.items
 
-    product_id = int(
-        request.args.get("product_id", -1)
-    )  # Filter with respect to query.
-    if product_id != -1:
+    product_id = request.args.get("product_id")
+    item_name = request.args.get("name")
+
+    if product_id:
+        product_id = int(product_id)
         items = Item.find_by_product_id(product_id)
-        if not items:  # if the list is empty, abort with 400_BAD REQUEST
+        if not items:
             abort(
                 status.HTTP_400_BAD_REQUEST,
                 "Please enter valid product id.",
             )
+    elif item_name:
+        items = Item.find_by_name(order_id, item_name)
 
-    # Get the items for the order
     results = [item.serialize() for item in items]
-
     return jsonify(results), status.HTTP_200_OK
 
 

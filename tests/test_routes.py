@@ -475,6 +475,42 @@ class TestOrderService(TestCase):
         resp = self.client.put(BASE_URL, json={"not": "today"})
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
+    def test_query_orders_by_date_range_success(self):
+        """It should list orders within a specific date range successfully"""
+        self._create_orders(5)
+
+        start_date = "2023-01-01"
+        end_date = "2023-01-31"
+        response = self.client.get(
+            f"{BASE_URL}?order-start={start_date}&order-end={end_date}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        orders = response.get_json()
+        self.assertIsInstance(orders, list)
+
+    def test_query_orders_with_start_date_only(self):
+        """It should list orders from the start date onwards"""
+        self._create_orders(5)
+
+        start_date = "2023-01-15"
+        response = self.client.get(f"{BASE_URL}?order-start={start_date}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        orders = response.get_json()
+        self.assertIsInstance(orders, list)
+
+    def test_query_orders_with_end_date_only(self):
+        """It should list orders up to the end date"""
+        self._create_orders(5)
+
+        end_date = "2023-01-15"
+        response = self.client.get(f"{BASE_URL}?order-end={end_date}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        orders = response.get_json()
+        self.assertIsInstance(orders, list)
+
     ######################################################################
     #  I T E M   T E S T   C A S E S
     ######################################################################

@@ -5,6 +5,7 @@ TestYourResourceModel API Service Test Suite
 import os
 import logging
 from unittest import TestCase
+from datetime import date, datetime
 from wsgi import app
 from service.common import status
 from service.models import db, Order
@@ -111,11 +112,47 @@ class TestOrderService(TestCase):
 
     def test_get_order_by_customer_id(self):
         """It should Get an Order by Customer Id"""
-        orders = self._create_orders(10)
-        resp = self.client.get(BASE_URL, query_string=f"customer-id={orders[7].customer_id}")
+        orders = self._create_orders(15)
+
+        # Create 3 sets of 5 orders with distinct customer ids.
+        counter = 0
+        for order in orders:
+            if counter < 5:
+                order.customer_id = 10
+                new_order_id = order.id
+                resp = self.client.put(f"{BASE_URL}/{new_order_id}", json=order.serialize())
+                self.assertEqual(resp.status_code, status.HTTP_200_OK)
+                updated_order = resp.get_json()
+                self.assertEqual(updated_order["customer_id"], 10)
+            elif counter < 10:
+                order.customer_id = 20
+                new_order_id = order.id
+                resp = self.client.put(f"{BASE_URL}/{new_order_id}", json=order.serialize())
+                self.assertEqual(resp.status_code, status.HTTP_200_OK)
+                updated_order = resp.get_json()
+                self.assertEqual(updated_order["customer_id"], 20)
+            else:
+                order.customer_id = 30
+                new_order_id = order.id
+                resp = self.client.put(f"{BASE_URL}/{new_order_id}", json=order.serialize())
+                self.assertEqual(resp.status_code, status.HTTP_200_OK)
+                updated_order = resp.get_json()
+                self.assertEqual(updated_order["customer_id"], 30)
+
+        # Initiate Query
+        resp = self.client.get(
+            BASE_URL, query_string="customer-id=10,30&sort_by=\"order-date\"")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
-        self.assertEqual(data[0]["customer_id"], orders[7].customer_id)
+
+        # Check query results have correct customer ids and are sorted
+        test_date = date.today()
+        for datapoint in data:
+            self.assertIn(datapoint["customer_id"], [10, 30])
+            test_date2 = datetime.strptime(datapoint["order_date"], "%Y-%m-%d").date()
+            self.assertLessEqual(test_date2, test_date)
+            test_date = test_date2
+            self.assertEqual(test_date2, test_date)
 
     def test_create_order(self):
         """It should Create a new Order"""

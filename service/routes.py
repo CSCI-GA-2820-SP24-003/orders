@@ -152,7 +152,7 @@ def list_orders():
 
         if not query_results:
             abort(
-                status.HTTP_400_BAD_REQUEST,
+                status.HTTP_404_NOT_FOUND,
                 f"{customer_id} is not a valid customer_id. Please enter an integer.",
             )
 

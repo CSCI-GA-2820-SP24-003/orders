@@ -201,7 +201,7 @@ class TestOrderService(TestCase):
         resp = self.client.get(
             f"{BASE_URL}?customer-id={random_cid}&sort_by={sorting_criterion}"
         )
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
         # Initiate Query with invalid c_id
         random_cid = "abc"

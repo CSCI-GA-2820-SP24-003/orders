@@ -148,7 +148,7 @@ def list_orders():
         query = query.filter(Order.customer_id.in_(customer_id))
         # print(query)
         query_results = query.all()
-        print(f"----------------- {query_results}----------------- ")
+        # print(f"----------------- {query_results}----------------- ")
 
         if not query_results:
             abort(
@@ -162,7 +162,7 @@ def list_orders():
         query = query.order_by(Order.total_amount.desc())
 
     orders = query.all()
-    print(orders)
+    # print(orders)
     return jsonify([order.serialize() for order in orders]), status.HTTP_200_OK
 
 
@@ -467,7 +467,7 @@ def ship_orders(order_id):
             f"Order with id '{order_id}' could not be found.",
         )
 
-    print(order.status)
+    # print(order.status)
     if order.status not in [OrderStatus.CANCELLED, OrderStatus.DELIVERED]:
         order.status = OrderStatus.SHIPPING
         order.update()

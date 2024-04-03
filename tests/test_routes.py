@@ -461,6 +461,101 @@ class TestOrderService(TestCase):
         resp = self.client.put(f"{BASE_URL}/{order_id}/packing", json=started_order)
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_deliver_order_success(self):
+        """It should deliver an Order that has been shipped"""
+        # Create an Order to pack
+        test_order = OrderFactory()
+        resp = self.client.post(BASE_URL, json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # set status to shipping
+        new_order = resp.get_json()
+        new_order["status"] = "SHIPPING"
+        order_id = new_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=new_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # deliver a shipped Order
+        shipped_order = resp.get_json()
+        order_id = shipped_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{order_id}/deliver")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated_order = resp.get_json()
+        self.assertEqual(updated_order["status"], "DELIVERED")
+
+        # deliver a DELIVERED Order (testing idempotence)
+        resp = self.client.put(f"{BASE_URL}/{order_id}/deliver")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        repacked_order = resp.get_json()
+        self.assertEqual(repacked_order["status"], "DELIVERED")
+
+    def test_deliver_order_failure(self):
+        """It should not an deliver an that isn't shipped yet or has been returned or cancelled"""
+        # Create an Order
+        test_order = OrderFactory()
+        resp = self.client.post(BASE_URL, json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # update order to started
+        new_order = resp.get_json()
+        new_order["status"] = "STARTED"
+        order_id = new_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=new_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # deliver a started Order
+        started_order = resp.get_json()
+        resp = self.client.put(f"{BASE_URL}/{order_id}/deliver")
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+
+        # Update the Order to PACKING
+        started_order["status"] = "PACKING"
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=started_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # deliver a packed order
+        packed_order = resp.get_json()
+        resp = self.client.put(f"{BASE_URL}/{order_id}/deliver")
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+
+        # update order to CANCELLED
+        packed_order["status"] = "CANCELLED"
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=packed_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # deliver a cancelled order
+        # cancelled_order = resp.get_json()
+        resp = self.client.put(f"{BASE_URL}/{order_id}/deliver")
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+
+        # update order to returned
+        packed_order["status"] = "RETURNED"
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=packed_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # deliver a returned order
+        # returned_order = resp.get_json()
+        resp = self.client.put(f"{BASE_URL}/{order_id}/deliver")
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+
+    def test_deliver_nonexistent_order(self):
+        """It should not deliver an Order that doesn't exist"""
+        test_order = OrderFactory()
+        resp = self.client.post(BASE_URL, json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Fail to pack a nonexistent Order
+        new_order = resp.get_json()
+        new_order["status"] = "SHIPPING"
+        order_id = new_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=new_order)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        shipped_order = resp.get_json()
+        order_id = shipped_order["id"] + 1
+        resp = self.client.put(f"{BASE_URL}/{order_id}/deliver", json=shipped_order)
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_query_orders_by_total_amount(self):
         """It should sort and filter orders in a particular range based on the total amount."""
 

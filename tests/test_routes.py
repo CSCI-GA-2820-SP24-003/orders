@@ -5,6 +5,7 @@ TestYourResourceModel API Service Test Suite
 import os
 import logging
 from unittest import TestCase
+from datetime import date, datetime
 from wsgi import app
 from service.models.order import OrderStatus
 from service.common import status
@@ -20,7 +21,7 @@ BASE_URL = "/orders"
 ######################################################################
 #  T E S T   C A S E S
 ######################################################################
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods, too-many-lines
 class TestOrderService(TestCase):
     """REST API Server Tests"""
 
@@ -109,6 +110,105 @@ class TestOrderService(TestCase):
             self.assertIsNotNone(order)
             self.assertEqual(order_data["customer_id"], order.customer_id)
             # Add more assertions here to check other fields if necessary
+
+    def test_get_order_by_customer_id(self):
+        """It should Get an Order by Customer Id"""
+        orders = self._create_orders(15)
+
+        # Create 3 sets of 5 orders with distinct customer ids.
+        counter = 0
+        c_id1 = 10
+        c_id2 = 20
+        c_id3 = 30
+        for order in orders:
+            if counter < 5:
+                order.customer_id = c_id1
+                new_order_id = order.id
+                resp = self.client.put(
+                    f"{BASE_URL}/{new_order_id}", json=order.serialize()
+                )
+                self.assertEqual(resp.status_code, status.HTTP_200_OK)
+                updated_order = resp.get_json()
+                self.assertEqual(updated_order["customer_id"], c_id1)
+            elif counter < 10:
+                order.customer_id = c_id2
+                new_order_id = order.id
+                resp = self.client.put(
+                    f"{BASE_URL}/{new_order_id}", json=order.serialize()
+                )
+                self.assertEqual(resp.status_code, status.HTTP_200_OK)
+                updated_order = resp.get_json()
+                self.assertEqual(updated_order["customer_id"], c_id2)
+            else:
+                order.customer_id = c_id3
+                new_order_id = order.id
+                resp = self.client.put(
+                    f"{BASE_URL}/{new_order_id}", json=order.serialize()
+                )
+                self.assertEqual(resp.status_code, status.HTTP_200_OK)
+                updated_order = resp.get_json()
+                self.assertEqual(updated_order["customer_id"], c_id3)
+
+        # Initiate Query with two ids
+        sorting_criterion = "order_date"
+        resp = self.client.get(
+            f"{BASE_URL}?customer-id={c_id1},{c_id3}&sort_by={sorting_criterion}"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+
+        # Check query results have correct customer ids and are sorted
+        test_date = date.today()
+        for data_point in data:
+            self.assertIn(data_point["customer_id"], [c_id1, c_id3])
+            test_date2 = datetime.strptime(data_point["order_date"], "%Y-%m-%d").date()
+            self.assertLessEqual(test_date2, test_date)
+            test_date = test_date2
+            self.assertEqual(test_date2, test_date)
+
+        # Initiate Query with single id
+        sorting_criterion = "order_date"
+        resp = self.client.get(
+            f"{BASE_URL}?customer-id={c_id1}&sort_by={sorting_criterion}"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        for data_point in data:
+            self.assertEqual(data_point["customer_id"], c_id1)
+
+    def test_get_order_by_customer_id_failure(self):
+        """It should Get an Order by Customer Id failure test case"""
+        orders = self._create_orders(5)
+
+        # Create 5 orders with distinct customer ids.
+        counter = 0
+        c_id = 10
+        for order in orders:
+            if counter < 5:
+                c_id += 10
+                order.customer_id = c_id
+                new_order_id = order.id
+                resp = self.client.put(
+                    f"{BASE_URL}/{new_order_id}", json=order.serialize()
+                )
+                self.assertEqual(resp.status_code, status.HTTP_200_OK)
+                updated_order = resp.get_json()
+                self.assertEqual(updated_order["customer_id"], c_id)
+
+        # Initiate Query with random c_id
+        sorting_criterion = "order_date"
+        random_cid = 728378
+        resp = self.client.get(
+            f"{BASE_URL}?customer-id={random_cid}&sort_by={sorting_criterion}"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Initiate Query with invalid c_id
+        random_cid = "abc"
+        resp = self.client.get(
+            f"{BASE_URL}?customer-id={random_cid}&sort_by={sorting_criterion}"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_order(self):
         """It should Create a new Order"""

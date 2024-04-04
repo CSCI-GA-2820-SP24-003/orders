@@ -22,12 +22,13 @@ import logging
 import os
 from unittest import TestCase
 from unittest.mock import patch
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from service.models.order import OrderStatus
 from service.models import Order, Item, DataValidationError, db
 
 from wsgi import app
 from tests.factories import OrderFactory, ItemFactory
+
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
@@ -155,6 +156,57 @@ class TestOrder(TestCase):
         """It should not Deserialize an order with a TypeError"""
         order = Order()
         self.assertRaises(DataValidationError, order.deserialize, [])
+
+    def test_list_all_orders(self):
+        """It should List all Orders in the database"""
+        orders = Order.all()
+        self.assertEqual(orders, [])
+        for order in OrderFactory.create_batch(5):
+            order.create()
+        # Assert that there are 5 orders in the database
+        orders = Order.all()
+        self.assertEqual(len(orders), 5)
+
+    def test_find_by_customer_id(self):
+        """It should Find an Order by customer id, in sorted order"""
+        orders = Order.all()
+        self.assertEqual(orders, [])
+        counter = 0
+        for order in OrderFactory.create_batch(15):
+            order.create()
+
+            # Have 3 sets of 5 orders with different customer ids.
+            if counter < 5:
+                order.customer_id = 10
+                order.update()
+                self.assertEqual(order.customer_id, 10)
+            elif counter < 10:
+                order.customer_id = 20
+                order.update()
+                self.assertEqual(order.customer_id, 20)
+            else:
+                order.customer_id = 30
+                order.update()
+                self.assertEqual(order.customer_id, 30)
+            counter += 1
+
+        # Assert that there are 15 orders in the database
+        orders = Order.all()
+        self.assertEqual(len(orders), 15)
+
+        # Fetch it back by customer id
+        filtered_orders = Order.find_by_customer_id([10, 30])
+
+        # Assert Number of Order with customer id 10 or 30 is 10
+        self.assertEqual(filtered_orders.count(), 10)
+
+        # Assert customer_ids of query are all 10 or 30, and are sorted by date.
+        test_date = date.today()
+        for order in filtered_orders:
+            self.assertIn(order.customer_id, [10, 30])
+            self.assertLessEqual(order.order_date, test_date)
+            test_date = order.order_date
+            self.assertEqual(order.order_date, test_date)
 
     def test_delete_a_order(self):
         """It should Delete a Order"""

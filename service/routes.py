@@ -478,6 +478,7 @@ def ship_orders(order_id):
 ######################################################################
 @app.route("/health")
 def health():
+    """Health Check to ensure system is up"""
     return jsonify(status=200, message="Response 200 OK"), status.HTTP_200_OK
 
 

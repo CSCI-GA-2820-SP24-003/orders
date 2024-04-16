@@ -10,7 +10,7 @@ spec:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 2
-      maxUnavailable: 0
+      maxUnavailable: 0  
   selector:
     matchLabels:
       app: orders
@@ -28,23 +28,29 @@ spec:
         - containerPort: 8080
           protocol: TCP
         env:
-          - name: RETRY_COUNT
-            value: "10"
           - name: DATABASE_URI
             valueFrom:
               secretKeyRef:
                 name: postgres-creds
                 key: database_uri
-        readinessProbe:
-          initialDelaySeconds: 5
-          periodSeconds: 30
+          - name: PORT
+            value: "8080"
+          - name: FLASK_APP
+            value: wsgi:app
+          - name: FLASK_DEBUG
+            value: "True"
+          - name: GUNICORN_BIND
+            value: "0.0.0.0:8080"
+        livenessProbe:
           httpGet:
             path: /health
             port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
         resources:
           limits:
             cpu: "0.50"
-            memory: "128Mi"
+            memory: "256Mi"
           requests:
-            cpu: "0.25"
-            memory: "64Mi"
+            cpu: "0.20"
+            memory: "128Mi"

@@ -30,7 +30,7 @@ spec:
                   key: password
           volumeMounts:
           - name: postgres-storage
-            mountPath: /data
+            mountPath: /var/lib/postgresql/data
           resources:
             limits:
               cpu: "0.50"

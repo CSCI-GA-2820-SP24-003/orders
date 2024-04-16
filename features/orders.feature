@@ -76,3 +76,18 @@ Scenario: Create an Item
         And I should see "SHIPPING" in the resultscc
         And I should see "STARTED" in the results
         And I should not see "PACKING" in the results
+
+    Scenario: List Items
+        When I visit the "Home Page"
+        And I press the "Clear" button
+        And I press the "Search" button
+        Then I should see the message "Success"
+        When I press the "Clear Item" button
+        Then the "Item ID" field should be empty
+        When I copy the "ID" field
+        And I press the "Clear" button
+        And I paste the "Order ID" field
+        And I press the "Search Item" button
+        Then I should see the message "Success"
+        And I should see "Phone" in the "List Item" results
+        And I should see "Laptop" in the "List Item" results

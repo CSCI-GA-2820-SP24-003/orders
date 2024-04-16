@@ -13,6 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ######################################################################
+
+
+# pylint: disable=function-redefined, missing-function-docstring, no-name-in-module
+# flake8: noqa
+
 """
 Order Steps
 
@@ -53,31 +58,31 @@ def step_impl(context):
             "shipping_address": row["shipping_address"],
             "payment_method": row["payment_method"],
             "shipping_cost": row["shipping_cost"],
-            "expected_date": row["expected_date"]
+            "expected_date": row["expected_date"],
         }
         context.resp = requests.post(rest_endpoint, json=payload)
         assert context.resp.status_code == HTTP_201_CREATED
 
-@given('the following items')
-def step_impl(context):
-    """ Load all items to the first order """
-    # Get the first order
-    rest_endpoint = f"{context.BASE_URL}/api/orders"
-    context.resp = requests.get(rest_endpoint)
-    assert context.resp.status_code == HTTP_200_OK
-    order = context.resp.json()[0]
-    items_route = f"{rest_endpoint}/{order['id']}/items"
-    # Add the new items in the table
-    for row in context.table:
-        payload = {
-            "id": row["id"],
-            "order_id": row["order_id"],
-            "product_id": row["product_id"],
-            "name": row["name"],
-            "quantity": row["quantity"],
-            "unit_price": row["unit_price"],
-            "total_price": row["total_price"]
-        }
-        }
-        context.resp = requests.post(items_route, json=payload)
-    assert context.resp.status_code == HTTP_201_CREATED
+
+# @given("the following items")
+# def step_impl(context):
+#     """Load all items to the first order"""
+#     # Get the first order
+#     rest_endpoint = f"{context.BASE_URL}/api/orders"
+#     context.resp = requests.get(rest_endpoint)
+#     assert context.resp.status_code == HTTP_200_OK
+#     order = context.resp.json()[0]
+#     items_route = f"{rest_endpoint}/{order['id']}/items"
+#     # Add the new items in the table
+#     for row in context.table:
+#         payload = {
+#             "id": row["id"],
+#             "order_id": row["order_id"],
+#             "product_id": row["product_id"],
+#             "name": row["name"],
+#             "quantity": row["quantity"],
+#             "unit_price": row["unit_price"],
+#             "total_price": row["total_price"],
+#         }
+#         context.resp = requests.post(items_route, json=payload)
+#     assert context.resp.status_code == HTTP_201_CREATED

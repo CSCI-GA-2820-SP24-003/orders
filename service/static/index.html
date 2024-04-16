@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Order Demo RESTful Service</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="static/images/newapp-icon.png">
+    <link rel="stylesheet" href="static/css/cerulean_bootstrap.min.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-header">
+          <h1>Order Demo REST API Service</h1>
+      </div>
+
+      <!-- Flash Message -->
+      <div class="table-responsive">
+        <table class="table">
+          <tr><td>Status:</td><td><span id="flash_message"></span></td></tr>
+        </table>
+      </div>
+
+      <!-- ORDER FORM -->
+      <div class="col-md-12" id="form_data">
+        <h3>Create, Retrieve, Update, and Delete an Order:</h3>
+        <div class="well">
+          <div class="form-horizontal">
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="order_id">Order ID:</label>
+              <div class="col-sm-6">
+                <input type="number" class="form-control" id="order_id" placeholder="Enter ID of Order">
+              </div>
+              <div class="col-sm-4">
+                <button type="submit" class="btn btn-primary" id="retrieve-btn">Retrieve</button>
+                <button type="submit" class="btn btn-danger" id="delete-btn">Delete</button>
+              </div>
+            </div>
+          </div> <!-- form horizontal -->
+
+          <div class="form-horizontal">
+
+            <!-- CUSTOMER_ID -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="customer_id">Customer ID:</label>
+              <div class="col-sm-10">
+                <input type="number" class="form-control" id="customer_id" placeholder="Enter customer id for Order">
+              </div>
+            </div>
+
+            <!-- ORDER_DATE -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="order_date">Order Date:</label>
+              <div class="col-sm-10">
+                <input type="date" class="form-control" id="order_date" placeholder="Enter order date for Order">
+              </div>
+            </div>
+
+            <!-- STATUS -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="status">Status:</label>
+              <div class="col-sm-10">
+                <select class="form-control" id="status">
+                  <option disabled selected value> -- Select a status -- </option>
+                  <option value="STARTED" >Started</option>
+                  <option value="PACKING" >Packing</option>
+                  <option value="SHIPPING" >Shipping</option>
+                  <option value="DELIVERED" >Delivered</option>
+                  <option value="CANCELLED" >Cancelled</option>
+                  <option value="RETURNED" >Returned</option>                                                    
+                </select>   
+              </div>
+            </div>
+
+            <!-- SHIPPING_ADDRESS -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="shipping_address">Shipping Address:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="shipping_address" placeholder="Enter Shipping Address for Order">
+              </div>
+            </div>
+
+            <!-- TOTAL_AMOUNT -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="total_amount">Total Amount:</label>
+              <div class="col-sm-10">
+                <input type="number" class="form-control" id="total_amount" placeholder="Enter Total Amount for Order">
+              </div>
+            </div>
+
+            <!-- PAYMENT_METHOD -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="payment_method">Payment Method:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="payment_method" placeholder="Enter Payment Method for Order">
+              </div>
+            </div>            
+
+            <!-- SHIPPING_COST -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="shipping_cost">Shipping Cost:</label>
+              <div class="col-sm-10">
+                <input type="number" class="form-control" id="shipping_cost" placeholder="Enter Shipping Cost for Order">
+              </div>
+            </div>            
+
+            <!-- EXPECTED_DATE -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="expected_date">Expected Date:</label>
+              <div class="col-sm-10">
+                <input type="date" class="form-control" id="expected_date" placeholder="2020-04-01">
+              </div>
+            </div>
+
+            <!-- ORDER_NOTES -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="order_notes">Order Notes:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="order_notes" placeholder="Enter Order Notes for Order">
+              </div>
+            </div>          
+
+            <!-- SUBMIT BUTTONS -->
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-primary" id="search-btn">Search</button>
+                <button type="submit" class="btn btn-primary" id="clear-btn">Clear</button>
+                <button type="submit" class="btn btn-success" id="create-btn">Create</button>
+                <button type="submit" class="btn btn-warning" id="update-btn">Update</button>
+              </div>
+            </div>
+          </div> <!-- form horizontal -->
+        </div> <!-- end well -->
+      </div> <!-- end Form -->
+
+      <!-- Order Search Results -->
+      <div class="table-responsive col-md-12" id="search_results">
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th class="col-md-1">ID</th>
+            <th class="col-md-4">Customer ID</th>
+            <th class="col-md-4">Order Date</th>
+            <th class="col-md-3">Status</th>
+            <th class="col-md-3">Shipping Address</th>
+            <th class="col-md-3">Total Amount</th>
+            <th class="col-md-3">Payment Method</th>
+            <th class="col-md-3">Shipping Cost</th>
+            <th class="col-md-3">Expected Date</th>
+            <th class="col-md-3">Order Notes</th>
+          </tr>
+          </thead>
+        </table>
+      </div>
+
+      <!-- ITEM FORM -->
+      <div class="col-md-12" id="form_data">
+        <h3>Create, Retrieve, Update, and Delete an Item:</h3>
+        <div class="well">
+          <div class="form-horizontal">
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="item_id">Item ID:</label>
+              <div class="col-sm-6">
+                <input type="number" class="form-control" id="item_id" placeholder="Enter ID of Item">
+              </div>
+              <div class="col-sm-4">
+                <button type="submit" class="btn btn-primary" id="retrieve-item-btn">Retrieve</button>
+                <button type="submit" class="btn btn-danger" id="delete-item-btn">Delete</button>
+              </div>
+            </div>
+          </div> <!-- form horizontal -->
+
+          <div class="form-horizontal">
+
+            <!-- ORDER_ID -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="item_order_id">Order ID:</label>
+              <div class="col-sm-10">
+                <input type="number" class="form-control" id="item_order_id" placeholder="Enter Order id for Item">
+              </div>
+            </div>
+
+            <!-- PRODUCT_ID -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="product_id">Product ID:</label>
+              <div class="col-sm-10">
+                <input type="number" class="form-control" id="product_id" placeholder="Enter Product ID for Item">
+              </div>
+            </div>
+
+            <!-- NAME -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="name">Name:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="name" placeholder="Enter name for Item">
+              </div>
+            </div>
+
+            <!-- QUANTITY -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="quantity">Quantity:</label>
+              <div class="col-sm-10">
+                <input type="number" class="form-control" id="quantity" placeholder="Enter quantity for Item">
+              </div>
+            </div>
+
+            <!-- UNIT_PRICE -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="unit_price">Unit Price:</label>
+              <div class="col-sm-10">
+                <input type="number" class="form-control" id="unit_price" placeholder="Enter unit price for Item">
+              </div>
+            </div>            
+
+            <!-- TOTAL_PRICE -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="total_price">Total Price:</label>
+              <div class="col-sm-10">
+                <input type="number" class="form-control" id="total_price" placeholder="Enter total price for Item">
+              </div>
+            </div>            
+
+            <!-- DESCRIPTION -->
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="description">Description:</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="description" placeholder="Enter description for Item">
+              </div>
+            </div>   
+
+            <!-- SUBMIT BUTTONS -->
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-primary" id="search-item-btn">Search</button>
+                <button type="submit" class="btn btn-primary" id="clear-item-btn">Clear</button>
+                <button type="submit" class="btn btn-success" id="create-item-btn">Create</button>
+                <button type="submit" class="btn btn-warning" id="update-item-btn">Update</button>
+              </div>
+            </div>
+          </div> <!-- form horizontal -->
+        </div> <!-- end well -->
+      </div> <!-- end Form -->
+
+      <!-- Search Results -->
+      <div class="table-responsive col-md-12" id="search_results">
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th class="col-md-1">ID</th>
+            <th class="col-md-4">Order ID</th>
+            <th class="col-md-4">Product ID</th>
+            <th class="col-md-3">Name</th>
+            <th class="col-md-3">Quantity</th>
+            <th class="col-md-3">Unit Price</th>
+            <th class="col-md-3">Total Price</th>
+            <th class="col-md-3">Description</th>
+          </tr>
+          </thead>
+        </table>
+      </div>
+
+      <footer>
+        <br><br>
+        <p>&copy; NYU Orders Company 2024</p>
+      </footer>
+
+    </div> <!-- container -->
+
+  <script type="text/javascript" src = "static/js/jquery-3.6.0.min.js"></script>
+  <script type="text/javascript" src = "static/js/bootstrap.min.js"></script>
+
+  <!-- YOUR REST API -->
+  <script type="text/javascript" src="static/js/rest_api.js"></script>
+
+  </body>
+</html>

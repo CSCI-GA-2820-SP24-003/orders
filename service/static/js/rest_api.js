@@ -342,7 +342,8 @@ $(function () {
         
         let ajax = $.ajax({
             type: "POST",
-            url: "/orders" + order_id + "/items",
+            // url: "/orders" + order_id + "/items",
+            url: `/orders/${order_id}/items`,
             contentType: "application/json",
             data: JSON.stringify(data),
         });
@@ -506,7 +507,7 @@ $(function () {
 
         ajax.done(function(res){
             //alert(res.toSource())
-            $("#search_results").empty();
+            $("#search_results_item").empty();
             let table = '<table class="table table-striped" cellpadding="10">'
             table += '<thead><tr>'
             table += '<th class="col-md-2">ID</th>'
@@ -527,7 +528,7 @@ $(function () {
                 }
             }
             table += '</tbody></table>';
-            $("#search_results").append(table);
+            $("#search_results_item").append(table);
 
             // copy the first result to the form
             if (firstItem != "") {

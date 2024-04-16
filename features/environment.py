@@ -14,6 +14,7 @@ def before_all(context):
     """Executed once before all tests"""
     context.base_url = BASE_URL
     context.wait_seconds = WAIT_SECONDS
+    context.scenario_data = {}
     # Select either Chrome or Firefox
     if "firefox" in DRIVER:
         context.driver = get_firefox()

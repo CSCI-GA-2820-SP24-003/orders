@@ -342,8 +342,7 @@ $(function () {
         
         let ajax = $.ajax({
             type: "POST",
-            // url: "/orders" + order_id + "/items",
-            url: `/orders/${order_id}/items`,
+            url: "/orders/" + order_id + "/items",
             contentType: "application/json",
             data: JSON.stringify(data),
         });

@@ -109,7 +109,7 @@ def list_orders():
 
     # try:
     query = Order.query
-    
+
     if order_status:
         query = query.filter(Order.status == order_status)
 

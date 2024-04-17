@@ -780,7 +780,7 @@ class TestOrderService(TestCase):
 
         orders = response.get_json()
         self.assertIsInstance(orders, list)
-    
+
     def test_query_order_list_by_status(self):
         """It should Query Orders by Status"""
         orders = self._create_orders(10)

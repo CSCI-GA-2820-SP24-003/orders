@@ -37,52 +37,59 @@ HTTP_201_CREATED = 201
 HTTP_204_NO_CONTENT = 204
 
 
-@given("the following orders")
+@given('the following orders')
 def step_impl(context):
-    """Delete all Orders and load new ones"""
-
-    # List all of the pets and delete them one by one
-    rest_endpoint = f"{context.base_url}/api/orders"
+    """ Delete all orders and load new ones """
+    # List all of the orders
+    rest_endpoint = f"{context.base_url}/orders"
     context.resp = requests.get(rest_endpoint)
-    assert context.resp.status_code == HTTP_200_OK
-    for order in context.resp.json():
-        context.resp = requests.delete(f"{rest_endpoint}/{order['id']}")
-        assert context.resp.status_code == HTTP_204_NO_CONTENT
+    assert(context.resp.status_code == HTTP_200_OK)
 
     # load the database with new orders
+    context.orders = []
     for row in context.table:
         payload = {
-            "customer_id": row["customer_id"],
-            "order_date": row["order_date"],
-            "status": row["status"],
-            "shipping_address": row["shipping_address"],
-            "payment_method": row["payment_method"],
-            "shipping_cost": row["shipping_cost"],
-            "expected_date": row["expected_date"],
+            "customer_id": int(row['customer_id']),
+            "order_date": row['order_date'],
+            "status": row['status'],
+            "shipping_address": row['shipping_address'],
+            "total_amount": float(row['total_amount']),
+            "payment_method": row['payment_method'],
+            "shipping_cost": float(row['shipping_cost']),
+            "expected_date": row['expected_date'],
+            "order_notes": row['order_notes'],
+            "items": []
         }
+        # print(f"Payload: {payload}")
         context.resp = requests.post(rest_endpoint, json=payload)
-        assert context.resp.status_code == HTTP_201_CREATED
+        # print(f"Response content: {context.resp.content}") 
+        assert(context.resp.status_code == HTTP_201_CREATED)
+        context.orders.append(payload)
 
 
-# @given("the following items")
-# def step_impl(context):
-#     """Load all items to the first order"""
-#     # Get the first order
-#     rest_endpoint = f"{context.BASE_URL}/api/orders"
-#     context.resp = requests.get(rest_endpoint)
-#     assert context.resp.status_code == HTTP_200_OK
-#     order = context.resp.json()[0]
-#     items_route = f"{rest_endpoint}/{order['id']}/items"
-#     # Add the new items in the table
-#     for row in context.table:
-#         payload = {
-#             "id": row["id"],
-#             "order_id": row["order_id"],
-#             "product_id": row["product_id"],
-#             "name": row["name"],
-#             "quantity": row["quantity"],
-#             "unit_price": row["unit_price"],
-#             "total_price": row["total_price"],
-#         }
-#         context.resp = requests.post(items_route, json=payload)
-#     assert context.resp.status_code == HTTP_201_CREATED
+@given('the following items')
+def step_impl(context):
+    """ Load all items to the first order """
+    # Get the first order
+    rest_endpoint = f"{context.base_url}/orders"
+    context.resp = requests.get(rest_endpoint)
+    assert context.resp.status_code == HTTP_200_OK
+    order = context.resp.json()[0]
+    items_route = f"{rest_endpoint}/{order['id']}/items"
+    # Add the new items in the table
+    context.items = []
+    for row in context.table:
+        payload = {
+            "order_id":order['id'],
+            "product_id": row["product_id"],
+            "name": row["name"],
+            "quantity": row["quantity"],
+            "unit_price": row["unit_price"],
+            "total_price": row["total_price"],
+            "description": row["description"]
+        }
+        context.resp = requests.post(items_route, json=payload)
+        # print(f"Response content: {context.resp.content}") 
+        assert(context.resp.status_code == HTTP_201_CREATED)
+        context.items.append(payload)
+        

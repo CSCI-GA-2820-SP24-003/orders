@@ -9,9 +9,9 @@ Background:
         | 123         | 2022-06-16 | STARTED  | fake address      | 1            | CREDIT         | 10            | 2022-06-20    | Some notes |
         | 456         | 2022-07-01 | SHIPPING | real address      | 100.50       | DEBIT          | 5.99          | 2022-07-05    | Special notes |
     Given the following items:
-        | ID          | Order ID       |Product ID    | Name       | Quantity           | Unit Price   | Total Price     |
-        | 4098        | 8782           |25            | Phone      | 2                  | 1000         | 2000            |
-        | 4099        | 8782           |30            | laptop     | 1	                | 6000         | 6000            |
+        |product_id    | name       | quantity           | unit_price   | total_price     |description      |
+        |25            | Phone      | 2                  | 1000         | 2000            |it's a phone     |
+        |30            | Laptop     | 1	                 | 6000         | 6000            |it's a laptop    |
 
 
 Scenario: The server is running
@@ -73,9 +73,9 @@ Scenario: Create an Item
         And I press the "Clear" button
         And I press the "Search" button
         Then I should see the message "Success"
-        And I should see "SHIPPING" in the resultscc
-        And I should see "STARTED" in the results
-        And I should not see "PACKING" in the results
+        And I should see "SHIPPING" in the "Order" results
+        And I should see "STARTED" in the "Order" results
+        And I should not see "PACKING" in the "Order" results
 
     Scenario: List Items
         When I visit the "Home Page"
@@ -84,10 +84,10 @@ Scenario: Create an Item
         Then I should see the message "Success"
         When I press the "Clear Item" button
         Then the "Item ID" field should be empty
-        When I copy the "ID" field
+        When I copy the "Order ID" field
         And I press the "Clear" button
-        And I paste the "Order ID" field
+        And I paste the "Item Order ID" field
         And I press the "Search Item" button
         Then I should see the message "Success"
-        And I should see "Phone" in the "List Item" results
-        And I should see "Laptop" in the "List Item" results
+        And I should see "Phone" in the "Item" results
+        And I should see "Laptop" in the "Item" results

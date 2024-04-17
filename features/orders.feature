@@ -151,7 +151,7 @@ Scenario: Query Items
     And I set the "name" to "lapt"
     And I press the "Search Item" button
     Then I should see the message "Success"
-    And I should see "Laptop" in the "Item" results
+    And I should see "Laptop" in the "Name" field
     And I should not see "Phone" in the "Item" results
     When I press the "Clear Item" button
     Then the "name" field should be empty
@@ -199,6 +199,53 @@ Scenario: Read an Item
     And I should see "1000" in the "Unit Price" field
     And I should see "2000" in the "Total Price" field
     And I should see "it's a phone" in the "Description" field
+
+Scenario: Update an Order
+    When I visit the "Home Page"
+    And I press the "Clear" button
+    And I press the "Search" button
+    Then I should see the message "Success"
+    When I copy the "Order Id" field
+    And I press the "Clear" button
+    And I paste the "Order Id" field
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    When I set the "Customer ID" to "8888"
+    And I press the "Update" button
+    Then I should see the message "Success"
+    When I press the "Clear" button
+    And I paste the "Order Id" field
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    And I should see "8888" in the "Customer ID" field
+
+Scenario: Update an Item
+    When I visit the "Home Page"
+    And I press the "Clear" button
+    And I press the "Search" button
+    Then I should see the message "Success"
+    When I copy the "Order Id" field
+    And I paste the "Item Order ID" field
+    And I press the "Search Item" button
+    Then I should see the message "Success"
+    When I copy the "Item Id" field
+    And I press the "Clear Item" button
+    And I paste the "Item Id" field
+    When I copy the "Order Id" field
+    And I paste the "Item Order ID" field
+    And I press the "Retrieve Item" button
+    Then I should see the message "Success"
+    When I set the "Quantity" to "3"
+    And I press the "Update Item" button
+    Then I should see the message "Success"
+    When I copy the "Item Id" field
+    And I press the "Clear Item" button
+    And I paste the "Item Id" field
+    When I copy the "Order Id" field
+    And I paste the "Item Order ID" field
+    And I press the "Retrieve Item" button
+    Then I should see the message "Success"
+    And I should see "3" in the "Quantity" field
 
 Scenario: Delete an Order
     When I visit the "Home Page"

@@ -126,6 +126,7 @@ $(function () {
         let shipping_cost = $("#shipping_cost").val();
         let expected_date = $("#expected_date").val();
         let order_notes = $("#order_notes").val();
+        let items = []
 
         let data = {
             "customer_id": customer_id,
@@ -136,7 +137,8 @@ $(function () {
             "payment_method": payment_method,
             "shipping_cost": shipping_cost,
             "expected_date": expected_date,
-            "order_notes": order_notes
+            "order_notes": order_notes,
+            "items":items
         };
 
         $("#flash_message").empty();

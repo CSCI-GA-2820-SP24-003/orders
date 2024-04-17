@@ -96,7 +96,7 @@ def list_orders():
     """Returns all Orders within a date range and total amount range if specified, sorted by order date or total amount."""
     app.logger.info("Request for Order list")
 
-    app.logger.info(f"request.url : {request.url}")
+    # app.logger.info(f"request.url : {request.url}")
 
     start_date_str = request.args.get("order-start")
     end_date_str = request.args.get("order-end")
@@ -104,7 +104,7 @@ def list_orders():
     total_max = request.args.get("total-max", default=math.inf)
     customer_id = request.args.get("customer-id")
     order_status = request.args.get("status")
-    app.logger.info(status)
+    # app.logger.info(status)
     sort_by = request.args.get("sort_by", default="order_date")
 
     # try:
@@ -162,7 +162,7 @@ def list_orders():
         query = query.order_by(Order.total_amount.desc())
 
     orders = query.all()
-    app.logger.info(orders)
+    # app.logger.info(orders)
     return jsonify([order.serialize() for order in orders]), status.HTTP_200_OK
 
 
@@ -180,6 +180,7 @@ def create_orders():
 
     # Create the order
     order = Order()
+    # app.logger.info(request.get_json())
     order.deserialize(request.get_json())
     order.create()
 
@@ -202,17 +203,18 @@ def update_orders(order_id):
     """
     app.logger.info("Request to update order with id: %s", order_id)
     check_content_type("application/json")
-
     # See if the order exists and abort if it doesn't
     order = Order.find(order_id)
     if not order:
         abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
 
     # Update from the json in the body of the request
+
+    # app.logger.info(f"request{request.get_json()}")
+
     order.deserialize(request.get_json())
     order.id = order_id
     order.update()
-
     return jsonify(order.serialize()), status.HTTP_200_OK
 
 

@@ -180,6 +180,7 @@ def create_orders():
 
     # Create the order
     order = Order()
+    app.logger.info(request.get_json())
     order.deserialize(request.get_json())
     order.create()
 
@@ -202,17 +203,18 @@ def update_orders(order_id):
     """
     app.logger.info("Request to update order with id: %s", order_id)
     check_content_type("application/json")
-
     # See if the order exists and abort if it doesn't
     order = Order.find(order_id)
     if not order:
         abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
 
     # Update from the json in the body of the request
+
+    # app.logger.info(f"request{request.get_json()}")
+
     order.deserialize(request.get_json())
     order.id = order_id
     order.update()
-
     return jsonify(order.serialize()), status.HTTP_200_OK
 
 

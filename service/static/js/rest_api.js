@@ -240,13 +240,13 @@ $(function () {
         let queryString = ""
 
         if (customer_id) {
-            queryString += 'customer_id=' + customer_id
+            queryString += 'customer-id=' + customer_id
         }
         if (order_date) {
             if (queryString.length > 0) {
-                queryString += '&order_date=' + order_date
+                queryString += '&order-start=' + order_date
             } else {
-                queryString += 'order_date=' + order_date
+                queryString += 'order-start=' + order_date
             }
         }
         if (status) {
@@ -258,9 +258,9 @@ $(function () {
         }
         if (total_amount) {
             if (queryString.length > 0) {
-                queryString += '&total_amount=' + total_amount
+                queryString += '&total-min=' + total_amount
             } else {
-                queryString += 'total_amount=' + total_amount
+                queryString += 'total-min=' + total_amount
             }
         }
 

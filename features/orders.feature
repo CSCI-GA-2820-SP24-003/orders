@@ -248,8 +248,8 @@ Scenario: Delete an Item
     Then I should see the message "Item has been Deleted!"
 
 Scenario: Cancel an order
-    Given I am on the "Home Page"
-    When I press the "Search" button
+    When I visit the "Home Page"
+    And I press the "Search" button
     Then I should see the message "Success"
     And I should see "STARTED" in the "Status" field
     

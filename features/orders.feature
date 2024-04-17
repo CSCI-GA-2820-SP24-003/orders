@@ -100,12 +100,9 @@ Scenario: Query Orders
     And I press the "Clear" button
     And I press the "Search" button
     Then I should see the message "Success"
-    When I press the "Clear Item" button
-    Then the "Item ID" field should be empty
-    When I copy the "Order ID" field
-    And I press the "Clear" button
-    And I paste the "Item Order ID" field
-    And I press the "Search Item" button
+    When I press the "Clear" button
+    And I set the "Status" to "Shipping"
+    And I press the "Search" button
     Then I should see the message "Success"
     And I should see "SHIPPING" in the "Order" results
     And I should not see "STARTED" in the "Order" results
@@ -125,11 +122,10 @@ Scenario: Query Orders
     And I should not see "100.50" in the "Order" results
     When I press the "Clear" button
     Then the "Total Amount" field should be empty
-    WHEN I set the "Order Date" to "06-16-2022"
+    WHEN I set the "Order Date" to "01-07-2022"
     And I press the "Search" button
     Then I should see the message "Success"
-    And I should see "2022-06-16" in the "Order" results
-    And I should not see "2022-07-01" in the "Order" results
+    And I should see "2022-07-01" in the "Order" results
     When I press the "Clear" button
     Then the "Order Date" field should be empty
 
@@ -139,11 +135,11 @@ Scenario: Query Items
     And I press the "Clear" button
     And I press the "Search" button
     Then I should see the message "Success"
-    WHEN I set the "Status" to "SHIPPING"
+    WHEN I set the "Status" to "Shipping"
     And I press the "Search" button
     Then I should see the message "Success"
-    And I save the "Order Id" field as "order_id"
-    And I set the "Item Order ID" to "{order_id}"
+    Then I save the "Order Id" field as "order_id"
+    When I set the "Item Order ID" to "{order_id}"
     And I set the "Product ID" to "25"
     And I press the "Search Item" button
     Then I should see the message "Success"

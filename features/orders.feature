@@ -251,7 +251,7 @@ Scenario: Cancel an order
     When I visit the "Home Page"
     And I press the "Search" button
     Then I should see the message "Success"
-    And I should see "STARTED" in the "Status" field
+    And I should see "SHIPPING" in the "Status" field
     
     When I press the "Cancel" button
     Then I should see the message "Order cancellation successful"

@@ -134,3 +134,50 @@ Scenario: Read an Item
     And I should see "1000" in the "Unit Price" field
     And I should see "2000" in the "Total Price" field
     And I should see "it's a phone" in the "Description" field
+
+Scenario: Read an Order
+    When I visit the "Home Page"
+    And I press the "Clear" button
+    And I press the "Search" button
+    Then I should see the message "Success"
+    When I copy the "Order Id" field
+    And I press the "Clear" button
+    And I paste the "Order Id" field
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    And I should see "456" in the "Customer ID" field
+    And I should see "2022-07-01" in the "Order Date" field
+    And I should see "SHIPPING" in the "Status" field
+    And I should see "real address" in the "Shipping Address" field
+    And I should see "100.5" in the "Total Amount" field
+    And I should see "DEBIT" in the "Payment Method" field
+    And I should see "5.99" in the "Shipping Cost" field
+    And I should see "2022-07-05" in the "Expected Date" field
+    And I should see "Special notes" in the "Order Notes" field
+    When I press the "Delete" button
+    Then I should see the message "Order has been Deleted!"
+
+Scenario: Read an Item
+    When I visit the "Home Page"
+    And I press the "Clear" button
+    And I press the "Search" button
+    Then I should see the message "Success"
+    When I copy the "Order Id" field
+    And I paste the "Item Order ID" field
+    And I press the "Search Item" button
+    Then I should see the message "Success"
+    When I copy the "Item Id" field
+    And I press the "Clear Item" button
+    And I paste the "Item Id" field
+    When I copy the "Order Id" field
+    And I paste the "Item Order ID" field
+    And I press the "Retrieve Item" button
+    Then I should see the message "Success"
+    And I should see "25" in the "Product ID" field
+    And I should see "Phone" in the "Name" field
+    And I should see "2" in the "Quantity" field
+    And I should see "1000" in the "Unit Price" field
+    And I should see "2000" in the "Total Price" field
+    And I should see "it's a phone" in the "Description" field
+    When I press the "Delete Item" button
+    Then I should see the message "Item has been Deleted!"

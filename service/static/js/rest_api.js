@@ -454,7 +454,7 @@ $(function () {
 
         ajax.done(function(res){
             clear_item_form_data()
-            flash_message("Order has been Deleted!")
+            flash_message("Item has been Deleted!")
         });
 
         ajax.fail(function(res){

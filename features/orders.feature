@@ -151,7 +151,7 @@ Scenario: Query Items
     And I set the "name" to "lapt"
     And I press the "Search Item" button
     Then I should see the message "Success"
-    And I should see "Laptop" in the "Item" results
+    And I should see "Laptop" in the "Name" field
     And I should not see "Phone" in the "Item" results
     When I press the "Clear Item" button
     Then the "name" field should be empty
@@ -226,6 +226,8 @@ Scenario: Update an Item
     Then I should see the message "Success"
     When I copy the "Order Id" field
     And I paste the "Item Order ID" field
+    And I press the "Search Item" button
+    Then I should see the message "Success"
     When I copy the "Item Id" field
     And I press the "Clear Item" button
     And I paste the "Item Id" field
@@ -236,7 +238,14 @@ Scenario: Update an Item
     When I set the "Quantity" to "3"
     And I press the "Update Item" button
     Then I should see the message "Success"
-    Then I should see "3" in the "Quantity" field
+    When I copy the "Item Id" field
+    And I press the "Clear Item" button
+    And I paste the "Item Id" field
+    When I copy the "Order Id" field
+    And I paste the "Item Order ID" field
+    And I press the "Retrieve Item" button
+    Then I should see the message "Success"
+    And I should see "3" in the "Quantity" field
 
 Scenario: Delete an Order
     When I visit the "Home Page"

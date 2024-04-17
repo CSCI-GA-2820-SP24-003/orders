@@ -144,7 +144,7 @@ def step_impl(context, element_name):
 @then('I should see "{name}" in the "{table_name}" results')
 def step_impl(context, name, table_name):
     table_id = "search_" + table_name.lower() + "_results"
-    print(table_id)
+    # print(table_id)
     found = WebDriverWait(context.driver, context.wait_seconds).until(
         expected_conditions.text_to_be_present_in_element(
             (By.ID, table_id), name
@@ -156,8 +156,9 @@ def step_impl(context, name, table_name):
 @then('I should not see "{name}" in the "{table_name}" results')
 def step_impl(context, name, table_name):
     table_id = "search_" + table_name.lower() + "_results"
-    print(table_id)
+    # print(table_id)
     element = context.driver.find_element(By.ID, table_id)
+    # print(f"element = {element}")
     assert name not in element.text
 
 

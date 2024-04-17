@@ -246,3 +246,16 @@ Scenario: Delete an Item
     And I should see "it's a phone" in the "Description" field
     When I press the "Delete Item" button
     Then I should see the message "Item has been Deleted!"
+
+Scenario: Cancel an order
+    Given I am on the "Home Page"
+    When I press the "Search" button
+    Then I should see the message "Success"
+    And I should see "STARTED" in the "Status" field
+    
+    When I press the "Cancel" button
+    Then I should see the message "Order cancellation successful"
+
+    When I press the "Retrieve" button
+    Then I should see the message "Success"
+    And I should see "CANCELLED" in the "Status" field

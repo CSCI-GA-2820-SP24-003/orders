@@ -231,7 +231,7 @@ $(function () {
         $("#flash_message").empty();
 
         let ajax = $.ajax({
-            type: "POST",
+            type: "PUT",
             url: `/orders/${order_id}/cancel`,
             contentType: "application/json",
             data: ''

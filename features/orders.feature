@@ -135,7 +135,7 @@ Scenario: Read an Item
     And I should see "2000" in the "Total Price" field
     And I should see "it's a phone" in the "Description" field
 
-Scenario: Read an Order
+Scenario: Delete an Order
     When I visit the "Home Page"
     And I press the "Clear" button
     And I press the "Search" button
@@ -157,7 +157,7 @@ Scenario: Read an Order
     When I press the "Delete" button
     Then I should see the message "Order has been Deleted!"
 
-Scenario: Read an Item
+Scenario: Delete an Item
     When I visit the "Home Page"
     And I press the "Clear" button
     And I press the "Search" button

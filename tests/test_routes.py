@@ -780,6 +780,21 @@ class TestOrderService(TestCase):
 
         orders = response.get_json()
         self.assertIsInstance(orders, list)
+    
+    def test_query_order_list_by_status(self):
+        """It should Query Orders by Status"""
+        orders = self._create_orders(10)
+        test_status = orders[0].status
+        status_orders = [order for order in orders if order.status == test_status]
+        response = self.client.get(
+            BASE_URL, query_string=f"status={(test_status.name)}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), len(status_orders))
+        # check the data just to be sure
+        for order in data:
+            self.assertEqual(order["status"], test_status.name)
 
     ######################################################################
     #  I T E M   T E S T   C A S E S

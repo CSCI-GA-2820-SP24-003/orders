@@ -20,8 +20,25 @@ and SQL database
 """
 import sys
 from flask import Flask
+from flask_restx import Api
 from service import config
 from service.common import log_handlers
+
+# NOTE: Do not change the order of this code
+# The Flask app must be created
+# BEFORE you import modules that depend on it !!!
+
+# Document the type of authorization required
+authorizations = {
+    "apikey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Api-Key"
+    }
+}
+
+# Will be initialize when app is created
+api = None  # pylint: disable=invalid-name
 
 
 ############################################################
@@ -32,6 +49,25 @@ def create_app():
     # Create Flask application
     app = Flask(__name__)
     app.config.from_object(config)
+
+    # Turn off strict slashes because it violates best practices
+    app.url_map.strict_slashes = False
+
+    ######################################################################
+    # Configure Swagger before initializing it
+    ######################################################################
+    global api
+    api = Api(
+        app,
+        version="1.0.0",
+        title="Orders REST API Service",
+        description="This is an Orders microservice server for an E-Commerce Application.",
+        default="orders",
+        default_label="Order operations",
+        doc="/apidocs",  # default also could use doc='/apidocs/'
+        authorizations=authorizations,
+        prefix="/api",
+    )
 
     # Initialize Plugins
     # pylint: disable=import-outside-toplevel

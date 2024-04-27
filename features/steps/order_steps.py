@@ -41,7 +41,7 @@ HTTP_204_NO_CONTENT = 204
 def step_impl(context):
     """ Delete all orders and load new ones """
     # List all of the orders
-    rest_endpoint = f"{context.base_url}/orders"
+    rest_endpoint = f"{context.base_url}/api/orders"
     context.resp = requests.get(rest_endpoint)
     assert(context.resp.status_code == HTTP_200_OK)
 
@@ -71,7 +71,7 @@ def step_impl(context):
 def step_impl(context):
     """ Load all items to the first order """
     # Get the first order
-    rest_endpoint = f"{context.base_url}/orders"
+    rest_endpoint = f"{context.base_url}/api/orders"
     context.resp = requests.get(rest_endpoint)
     assert context.resp.status_code == HTTP_200_OK
     order = context.resp.json()[0]

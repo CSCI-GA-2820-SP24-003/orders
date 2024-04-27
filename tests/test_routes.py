@@ -7,7 +7,7 @@ import logging
 from unittest import TestCase
 from datetime import date, datetime
 from wsgi import app
-from service.models.order import OrderStatus
+# from service.models.order import OrderStatus
 from service.common import status
 from service.models import db, Order
 from tests.factories import OrderFactory, ItemFactory
@@ -86,7 +86,7 @@ class TestOrderService(TestCase):
             order.create()
 
         # Make a GET request to the /orders endpoint
-        response = self.client.get("/orders")
+        response = self.client.get(f"{BASE_URL}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Load the response data
@@ -391,11 +391,11 @@ class TestOrderService(TestCase):
         resp = self.client.put(f"{BASE_URL}/{order_id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
         data = resp.get_data(as_text=True)
-        data = data.replace("<p>", "*")
-        data = data.replace("</p>", "*")
-        tokens = data.split("*")
-        data = tokens[1]
-        self.assertEqual(data, "Orders that have been delivered cannot be cancelled")
+        # data = data.replace("<p>", "*")
+        # data = data.replace("</p>", "*")
+        # tokens = data.split("*")
+        # data = tokens[1]
+        self.assertIn("Orders that have been delivered cannot be cancelled", data)
 
         # Update the Order to Returned
         delivered_order["status"] = "RETURNED"
@@ -408,11 +408,11 @@ class TestOrderService(TestCase):
         resp = self.client.put(f"{BASE_URL}/{order_id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
         data = resp.get_data(as_text=True)
-        data = data.replace("<p>", "*")
-        data = data.replace("</p>", "*")
-        tokens = data.split("*")
-        data = tokens[1]
-        self.assertEqual(data, "Orders that have been delivered cannot be cancelled")
+        # data = data.replace("<p>", "*")
+        # data = data.replace("</p>", "*")
+        # tokens = data.split("*")
+        # data = tokens[1]
+        self.assertIn("Orders that have been delivered cannot be cancelled", data)
 
     def test_cancel_nonexistent_order(self):
         """It should not Cancel an Order that doesn't exist"""
@@ -458,7 +458,7 @@ class TestOrderService(TestCase):
 
     def test_ship_order_not_found(self):
         """Ship an order when order does not exist"""
-        resp = self.client.put("/orders/0/ship")
+        resp = self.client.put(f"{BASE_URL}/0/ship")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_ship_order_with_canceled_order(self):
@@ -901,7 +901,7 @@ class TestOrderService(TestCase):
         print(item)
         print("SENDING:", item.serialize())
         resp = self.client.post(
-            f"/orders/{order.id}/items",
+            f"{BASE_URL}/{order.id}/items",
             json=item.serialize(),
             content_type="application/json",
         )
@@ -909,7 +909,7 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         data = resp.get_json()
         item_id = data["id"]
-        response = self.client.get(f"/orders/{order.id}/items/{item_id}")
+        response = self.client.get(f"{BASE_URL}/{order.id}/items/{item_id}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
         self.assertIsNotNone(data)

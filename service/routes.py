@@ -99,11 +99,11 @@ item_args.add_argument("name", type=str, location="args", required=False, help="
 order_args = reqparse.RequestParser()
 order_args.add_argument("order-start", type=str, location="args", required=False, help="List Orders ordered after a date")
 order_args.add_argument("order-end", type=str, location="args", required=False, help="List Orders ordered before a date")
-order_args.add_argument("total-min", type=float, default=0.0, location="args", required=False,
+order_args.add_argument("total-min", type=str, default=0.0, location="args", required=False,
                         help="List Orders with a total cost above a price point")
-order_args.add_argument("total-max", type=float, default=math.inf, location="args", required=False,
+order_args.add_argument("total-max", type=str, default=math.inf, location="args", required=False,
                         help="List Orders with a total cost below a price point")
-order_args.add_argument("customer-id", type=int, location="args", required=False,
+order_args.add_argument("customer-id", type=str, location="args", required=False,
                         help="List Orders from a specific customer")
 order_args.add_argument("status", type=str, location="args", required=False, help="List Orders with a specific Order status")
 order_args.add_argument("sort_by", type=str, location="args", required=False,
@@ -135,8 +135,6 @@ class OrderResource(Resource):
     ######################################################################
     # READ A ORDER
     ######################################################################
-
-#@app.route("/orders/<int:order_id>", methods=["GET"])
     @api.doc("get_orders")
     @api.response(404, "Order not found")
     @api.marshal_with(order_model)
@@ -159,7 +157,6 @@ class OrderResource(Resource):
     ######################################################################
     # UPDATE AN EXISTING ORDER
     ######################################################################
-    #@app.route("/orders/<int:order_id>", methods=["PUT"])
     @api.doc("update_orders")
     @api.response(404, "Order not found")
     @api.response(400, "The posted Order data was not valid")
@@ -172,7 +169,7 @@ class OrderResource(Resource):
         This endpoint will update an Order based the body that is posted
         """
         app.logger.info("Request to update order with id: %s", order_id)
-        #check_content_type("application/json")
+        check_content_type("application/json")
         # See if the order exists and abort if it doesn't
         order = Order.find(order_id)
         if not order:
@@ -180,7 +177,6 @@ class OrderResource(Resource):
 
         # Update from the json in the body of the request
 
-        # app.logger.info(f"request{request.get_json()}")
         app.logger.debug("Payload = %s", api.payload)
         data = api.payload
         order.deserialize(data)
@@ -192,7 +188,6 @@ class OrderResource(Resource):
     ######################################################################
     # DELETE A ORDER
     ######################################################################
-    #@app.route("/orders/<int:order_id>", methods=["DELETE"])
     @api.doc("delete_orders")
     @api.response(204, "Order deleted")
     def delete(self, order_id):
@@ -222,24 +217,12 @@ class OrderCollection(Resource):
     # LIST ALL ORDERS
     ######################################################################
     # flake8: noqa: C901
-    #@app.route("/orders", methods=["GET"])
     @api.doc("list_orders")
     @api.expect(order_args, validate=True)
     @api.marshal_list_with(order_model)
     def get(self):
         """Returns all Orders within a date range and total amount range if specified, sorted by order date or total amount."""
         app.logger.info("Request for Order list")
-
-        # app.logger.info(f"request.url : {request.url}")
-
-        # start_date_str = request.args.get("order-start")
-        # end_date_str = request.args.get("order-end")
-        # total_min = request.args.get("total-min", default=0.0)
-        # total_max = request.args.get("total-max", default=math.inf)
-        # customer_id = request.args.get("customer-id")
-        # order_status = request.args.get("status")
-        # # app.logger.info(status)
-        # sort_by = request.args.get("sort_by", default="order_date")
 
         # try:
         query = Order.query
@@ -270,7 +253,6 @@ class OrderCollection(Resource):
             try:
                 customer_id = [int(args["customer-id"])]
             except (TypeError, ValueError):
-                # print(f"inside second try----------------- {customer_id}")
                 try:
                     customer_id = args["customer-id"].split(",")
                     customer_id = [int(c_id) for c_id in customer_id]
@@ -281,9 +263,7 @@ class OrderCollection(Resource):
                     )
 
             query = query.filter(Order.customer_id.in_(customer_id))
-            # print(query)
             query_results = query.all()
-            # print(f"----------------- {query_results}----------------- ")
 
             if not query_results:
                 abort(
@@ -297,14 +277,12 @@ class OrderCollection(Resource):
             query = query.order_by(Order.total_amount.desc())
 
         orders = query.all()
-        # app.logger.info(orders)
         return [order.serialize() for order in orders], status.HTTP_200_OK
 
 
     ######################################################################
     # CREATE A NEW ORDER
     ######################################################################
-    #@app.route("/orders", methods=["POST"])
     @api.doc("create_orders")
     @api.response(400, "The posted data was not valid")
     @api.expect(order_create_model)
@@ -315,11 +293,10 @@ class OrderCollection(Resource):
         This endpoint will create an Order based the data in the body that is posted
         """
         app.logger.info("Request to create an Order")
-        #check_content_type("application/json")
+        check_content_type("application/json")
 
         # Create the order
         order = Order()
-        # app.logger.info(request.get_json())
         app.logger.debug("Payload = %s", api.payload)
         order.deserialize(api.payload)
         order.create()
@@ -327,7 +304,6 @@ class OrderCollection(Resource):
         # Create a message to return
         app.logger.info("order with new id [%s] created!", order.id)
         message = order.serialize()
-        #location_url = url_for("get_orders", order_id=order.id, _external=True)
         location_url = api.url_for(OrderResource, order_id=order.id, _external=True)
 
         return message, status.HTTP_201_CREATED, {"Location": location_url}
@@ -336,8 +312,6 @@ class OrderCollection(Resource):
 ######################################################################
 #  PATH: /orders/{id}/cancel
 ######################################################################
-#@app.route("/orders/<int:order_id>/cancel", methods=["PUT"])
-
 @api.route("/orders/<int:order_id>/cancel")
 @api.param("order_id", "The Order identifier")
 class CancelOrderResource(Resource):
@@ -375,7 +349,6 @@ class CancelOrderResource(Resource):
 ######################################################################
 #  PATH: /orders/{id}/deliver
 ######################################################################
-#@app.route("/orders/<int:order_id>/deliver", methods=["PUT"])
 @api.route("/orders/<int:order_id>/deliver")
 @api.param("order_id", "The Order identifier")
 class DeliverOrderResource(Resource):
@@ -394,7 +367,6 @@ class DeliverOrderResource(Resource):
             )
 
         # abort if invalid order status
-        # print(order.status)
         if order.status not in (OrderStatus.SHIPPING, OrderStatus.DELIVERED):
             abort(
                 status.HTTP_409_CONFLICT,
@@ -410,7 +382,6 @@ class DeliverOrderResource(Resource):
 ######################################################################
 #  PATH: /orders/{id}/packing
 ######################################################################
-#@app.route("/orders/<int:order_id>/packing", methods=["PUT"])
 @api.route("/orders/<int:order_id>/packing")
 @api.param("order_id", "The Order identifier")
 class PackOrderResource(Resource):
@@ -429,7 +400,6 @@ class PackOrderResource(Resource):
             )
 
         # abort if invalid order status
-        # print(order.status)
         if order.status not in (OrderStatus.STARTED, OrderStatus.PACKING):
             abort(
                 status.HTTP_409_CONFLICT,
@@ -445,7 +415,6 @@ class PackOrderResource(Resource):
 ######################################################################
 #  PATH: /orders/{id}/ship
 ######################################################################
-#@app.route("/orders/<int:order_id>/ship", methods=["PUT"])
 @api.route("/orders/<int:order_id>/ship")
 @api.param("order_id", "The Order identifier")
 class ShipOrderResource(Resource):
@@ -463,7 +432,7 @@ class ShipOrderResource(Resource):
                 f"Order with id '{order_id}' could not be found.",
             )
 
-        # print(order.status)
+        # abort if invalid order status
         if order.status not in [OrderStatus.CANCELLED, OrderStatus.DELIVERED]:
             order.status = OrderStatus.SHIPPING
             order.update()
@@ -494,7 +463,6 @@ class ItemResource(Resource):
     ######################################################################
     # GET A SINGLE ITEM IN AN ORDER
     ######################################################################
-    #@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["GET"])
     @api.doc("get_items")
     @api.response(404, "Item not found")
     @api.marshal_with(item_model)
@@ -519,7 +487,6 @@ class ItemResource(Resource):
     ######################################################################
     # UPDATE AN ITEM
     ######################################################################
-    #@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["PUT"])
     @api.doc("update_items")
     @api.response(404, "Item not found")
     @api.response(400, "The posted Item data was not valid")
@@ -532,7 +499,7 @@ class ItemResource(Resource):
         This endpoint will update an Item based the body that is posted
         """
         app.logger.info("Request to update Item %s for Order id: %s", (item_id, order_id))
-        #check_content_type("application/json")
+        check_content_type("application/json")
 
         # See if the item exists and abort if it doesn't
         item = Item.find(item_id)
@@ -555,7 +522,6 @@ class ItemResource(Resource):
     ######################################################################
     # DELETE AN AN ITEM FROM AN ORDER
     ######################################################################
-    #@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["DELETE"])
     @api.doc("delete_items")
     @api.response(204, "Item deleted")
     def delete(self, order_id, item_id):
@@ -585,7 +551,6 @@ class ItemCollection(Resource):
     ######################################################################
     # LIST ITEMS BY NAME
     ######################################################################
-    #@app.route("/orders/<int:order_id>/items", methods=["GET"])
     @api.doc("list_items")
     @api.expect(item_args, validate=True)
     @api.marshal_list_with(item_model)
@@ -602,9 +567,6 @@ class ItemCollection(Resource):
 
         items = order.items
         args = item_args.parse_args()
-
-        #product_id = request.args.get("product_id")
-        #item_name = request.args.get("name")
 
         if args["product-id"]:
             product_id = int(args["product-id"])
@@ -623,9 +585,6 @@ class ItemCollection(Resource):
     ######################################################################
     # ADD AN ITEM TO AN ORDER
     ######################################################################
-
-
-    #@app.route("/orders/<int:order_id>/items", methods=["POST"])
     @api.doc("create_items")
     @api.response(400, "The posted data was not valid")
     @api.expect(item_create_model)
@@ -638,7 +597,7 @@ class ItemCollection(Resource):
             order_id ( integer )
         """
         app.logger.info("Adding an item to the order with order_id %s", order_id)
-        #check_content_type("application/json")
+        check_content_type("application/json")
 
         order = Order.find(order_id)
         if not order:
@@ -652,10 +611,6 @@ class ItemCollection(Resource):
         app.logger.debug("Payload = %s", api.payload)
         item.deserialize(api.payload)
         item.order_id = order_id
-
-        #order.items.append(item)
-        #order.update()
-        #item.update()
         item.create()
 
         location_url = api.url_for(

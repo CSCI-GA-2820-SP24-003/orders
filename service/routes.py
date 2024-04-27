@@ -27,10 +27,13 @@ from flask import jsonify
 
 from flask import request, url_for, abort
 from flask import current_app as app  # Import Flask application
+from flask_restx import Resource, fields, reqparse, inputs
 
 from service.models import Order, Item
 from service.models.order import OrderStatus
 from service.common import status  # HTTP Status Codes
+
+from service import api
 
 
 ######################################################################
@@ -41,6 +44,66 @@ def index():
     """Root URL response"""
     return app.send_static_file("index.html")
 
+# Define the model so that the docs reflect what can be sent
+item_create_model = api.model(
+    "Item",
+    {
+        "order_id": fields.Integer(required=True, description="The Order an Item is associated with"),
+        "product_id": fields.Integer(required=True, description="The product an Item is associated with"),
+        "name": fields.String(required=True, description="The name of the Item"),
+        "quantity": fields.Integer(required=True, description="The quantity of the Item purchased"),
+        "unit_price": fields.Float(required=True, description="The unit price for the Item"),
+        "total_price": fields.Float(required=True, description="The total price of the Item purchased"),
+        "description": fields.String(required=True, description="The description for the Item")
+    }
+)
+
+item_model = api.model(
+    "ItemModel",
+    item_create_model,
+    {
+        "id": fields.Integer(readOnly=True, description="The ID for the Item")
+    }
+)
+
+order_create_model = api.model(
+    "Order",
+    {
+        "customer_id": fields.Integer(required=True, description="The ID of the customer purchasing the Order"),
+        "order_date": fields.Date(required=True, description="The date the Order was made",),
+        # pylint: disable=protected-access
+        "status": fields.String(enum=OrderStatus, description="The status of the Order"),
+        "shipping_address": fields.String(required=True, description="The place where the Order is delivered to"),
+        "total_amount": fields.Float(required=True, description="The total cost of items in the Order"),
+        "payment_method": fields.String(required=True, description="The payment method for the Order"),
+        "shipping_cost": fields.Float(required=True, description="The shipping cost of the Order"),
+        "expected_date": fields.Date(required=True, description="The date the Order is expected to arrive"),
+        "order_notes": fields.String(required=False, description="The notes for the Order delivery"),
+        "items": fields.Nested(fields.Nested(item_create_model),required=False, description="The items within the Order")
+    },
+)
+
+order_model = api.inherit(
+    "PetModel",
+    order_create_model,
+    {
+        "id": fields.String(readOnly=True, description="The unique id assigned internally by service"),
+    },
+)
+
+# query string arguments
+order_args = reqparse.RequestParser()
+order_args.add_argument("order-start", type=str, location="args", required=False, help="List Orders ordered after a date")
+order_args.add_argument("order-end", type=str, location="args", required=False, help="List Orders ordered before a date")
+order_args.add_argument("total-min", type=float, location="args", required=False,
+                        help="List Orders with a total cost above a price point")
+order_args.add_argument("total-max", type=float, location="args", required=False,
+                        help="List Orders with a total cost below a price point")
+order_args.add_argument("customer-id", type=int, location="args", required=False, help="List Orders from a specific customer")
+order_args.add_argument("status", type=str, location="args", required=False, help="List Orders with a specific Order status")
+order_args.add_argument("sort_by", type=str, location="args", required=False, help="List Orders sorted by a particular metric")
+
+
 
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
@@ -48,23 +111,43 @@ def index():
 
 
 ######################################################################
-# READ A ORDER
+#  PATH: /pets/{id}
 ######################################################################
-@app.route("/orders/<int:order_id>", methods=["GET"])
-def get_orders(order_id):
+@api.route("/orders/<order_id>")
+@api.param("order_id", "The Order identifier")
+class OrderResource(Resource):
     """
-    Retrieve a single Order
+    OrderResource class
 
-    This endpoint will return a Order based on it's id
+    Allows the manipulation of a single Order
+    GET /order{id} - Returns an Order with the id
+    PUT /order{id} - Update an Order with the id
+    DELETE /order{id} -  Deletes an Order with the id
     """
-    app.logger.info("Request for order with id: %s", order_id)
 
-    order = Order.find(order_id)
-    if not order:
-        error(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
 
-    app.logger.info("Returning order: %s", order.id)
-    return jsonify(order.serialize()), status.HTTP_200_OK
+    ######################################################################
+    # READ A ORDER
+    ######################################################################
+    #@app.route("/orders/<int:order_id>", methods=["GET"])
+
+    @api.doc("get_orders")
+    @api.response(404, "Order not found")
+    @api.marshal_with(order_model)
+    def get_orders(self, order_id):
+        """
+        Retrieve a single Order
+
+        This endpoint will return a Order based on its id
+        """
+        app.logger.info("Request for order with id: %s", order_id)
+
+        order = Order.find(order_id)
+        if not order:
+            error(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+
+        app.logger.info("Returning order: %s", order.id)
+        return jsonify(order.serialize()), status.HTTP_200_OK
 
 
 ######################################################################

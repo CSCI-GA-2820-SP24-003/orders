@@ -391,10 +391,6 @@ class TestOrderService(TestCase):
         resp = self.client.put(f"{BASE_URL}/{order_id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
         data = resp.get_data(as_text=True)
-        # data = data.replace("<p>", "*")
-        # data = data.replace("</p>", "*")
-        # tokens = data.split("*")
-        # data = tokens[1]
         self.assertIn("Orders that have been delivered cannot be cancelled", data)
 
         # Update the Order to Returned
@@ -408,10 +404,6 @@ class TestOrderService(TestCase):
         resp = self.client.put(f"{BASE_URL}/{order_id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
         data = resp.get_data(as_text=True)
-        # data = data.replace("<p>", "*")
-        # data = data.replace("</p>", "*")
-        # tokens = data.split("*")
-        # data = tokens[1]
         self.assertIn("Orders that have been delivered cannot be cancelled", data)
 
     def test_cancel_nonexistent_order(self):

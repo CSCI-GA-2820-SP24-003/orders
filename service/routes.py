@@ -133,7 +133,7 @@ class OrderResource(Resource):
 
 
     ######################################################################
-    # READ A ORDER
+    # READ AN ORDER
     ######################################################################
     @api.doc("get_orders")
     @api.response(404, "Order not found")
@@ -186,7 +186,7 @@ class OrderResource(Resource):
 
 
     ######################################################################
-    # DELETE A ORDER
+    # DELETE AN ORDER
     ######################################################################
     @api.doc("delete_orders")
     @api.response(204, "Order deleted")
@@ -549,7 +549,7 @@ class ItemCollection(Resource):
     """Handles all interactions with collections of Items"""
 
     ######################################################################
-    # LIST ITEMS BY NAME
+    # LIST ITEMS
     ######################################################################
     @api.doc("list_items")
     @api.expect(item_args, validate=True)

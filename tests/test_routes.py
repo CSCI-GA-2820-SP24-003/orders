@@ -7,6 +7,7 @@ import logging
 from unittest import TestCase
 from datetime import date, datetime
 from wsgi import app
+
 # from service.models.order import OrderStatus
 from service.common import status
 from service.models import db, Order
@@ -1019,9 +1020,10 @@ class TestOrderService(TestCase):
         # print(product_id)
 
         resp = self.client.get(
-            f"{BASE_URL}/{order.id}/items?product-id={55}",
+            f"{BASE_URL}/{order.id}/items?product_id={55}",
             content_type="application/json",
         )
+        print(resp)
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_query_item_by_name(self):

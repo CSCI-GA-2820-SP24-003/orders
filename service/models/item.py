@@ -76,7 +76,7 @@ class Item(db.Model, PersistentBase):
         return self
 
     @classmethod
-    def find_by_product_id(cls, product_id):
+    def find_by_product_id(cls, order_id, product_id):
         """Returns all Items with the given product_id
 
         Args:
@@ -84,7 +84,9 @@ class Item(db.Model, PersistentBase):
         """
         logger.info("Processing product_id query for %s ...", product_id)
         # return Item.query.filter(Item.product_id == product_id)
-        return cls.query.filter(cls.product_id == product_id).all()
+        return cls.query.filter(
+            cls.order_id == order_id, cls.product_id == product_id
+        ).all()
 
     @classmethod
     def find_by_name(cls, order_id, name):

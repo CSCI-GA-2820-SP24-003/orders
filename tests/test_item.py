@@ -178,16 +178,21 @@ class TestItem(TestCase):
         """Find Items by product_id"""
         order = OrderFactory()
         order.create()
-
+        o_id = order.id
+        print(o_id)
         item = ItemFactory(
-            order_id=order.id, product_id=1, name="ruler", quantity=1, unit_price=10.50
+            order_id=o_id, product_id=1, name="ruler", quantity=1, unit_price=10.50
         )
         item.create()
         item2 = ItemFactory(
-            order_id=order.id, product_id=2, name="drill", quantity=2, unit_price=11
+            order_id=o_id, product_id=2, name="drill", quantity=2, unit_price=11
         )
         item2.create()
-        items = Item.find_by_product_id(1)
+        print(order.serialize())
+        print(item2.serialize())
+        print(item.serialize())
+        items = Item.find_by_product_id(item.order_id, 1)
+        print(items)
         self.assertEqual(items[0].product_id, 1)
         self.assertEqual(items[0].name, "ruler")
         self.assertEqual(items[0].quantity, 1)

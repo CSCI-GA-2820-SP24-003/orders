@@ -7,7 +7,8 @@ import logging
 from unittest import TestCase
 from datetime import date, datetime
 from wsgi import app
-from service.models.order import OrderStatus
+
+# from service.models.order import OrderStatus
 from service.common import status
 from service.models import db, Order
 from tests.factories import OrderFactory, ItemFactory
@@ -15,7 +16,7 @@ from tests.factories import OrderFactory, ItemFactory
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
-BASE_URL = "/orders"
+BASE_URL = "/api/orders"
 
 
 ######################################################################
@@ -86,7 +87,7 @@ class TestOrderService(TestCase):
             order.create()
 
         # Make a GET request to the /orders endpoint
-        response = self.client.get("/orders")
+        response = self.client.get(f"{BASE_URL}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Load the response data
@@ -258,7 +259,7 @@ class TestOrderService(TestCase):
         )
 
         # Check that the location header was correct by getting it
-        resp = self.client.get(location, content_type="application/json")
+        resp = self.client.get(location)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         new_order = resp.get_json()
         self.assertEqual(
@@ -320,7 +321,7 @@ class TestOrderService(TestCase):
         # Fail to Update a nonexistent Order
         new_order = resp.get_json()
         new_order["shipping_address"] = "New Road New City"
-        new_order_id = new_order["id"] + 1
+        new_order_id = int(new_order["id"]) + 1
         resp = self.client.put(f"{BASE_URL}/{new_order_id}", json=new_order)
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -391,11 +392,7 @@ class TestOrderService(TestCase):
         resp = self.client.put(f"{BASE_URL}/{order_id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
         data = resp.get_data(as_text=True)
-        data = data.replace("<p>", "*")
-        data = data.replace("</p>", "*")
-        tokens = data.split("*")
-        data = tokens[1]
-        self.assertEqual(data, "Orders that have been delivered cannot be cancelled")
+        self.assertIn("Orders that have been delivered cannot be cancelled", data)
 
         # Update the Order to Returned
         delivered_order["status"] = "RETURNED"
@@ -408,11 +405,7 @@ class TestOrderService(TestCase):
         resp = self.client.put(f"{BASE_URL}/{order_id}/cancel")
         self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
         data = resp.get_data(as_text=True)
-        data = data.replace("<p>", "*")
-        data = data.replace("</p>", "*")
-        tokens = data.split("*")
-        data = tokens[1]
-        self.assertEqual(data, "Orders that have been delivered cannot be cancelled")
+        self.assertIn("Orders that have been delivered cannot be cancelled", data)
 
     def test_cancel_nonexistent_order(self):
         """It should not Cancel an Order that doesn't exist"""
@@ -430,35 +423,76 @@ class TestOrderService(TestCase):
 
     def test_ship_order(self):
         """Ship an order"""
-        order = self._create_orders(1)[0]
-        order.status = OrderStatus.PACKING
-        resp = self.client.put(f"/orders/{order.id}", json=order.serialize())
+        # Create an Order to ship
+        test_order = OrderFactory()
+        resp = self.client.post(BASE_URL, json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # set status to packing
+        new_order = resp.get_json()
+        new_order["status"] = "PACKING"
+        order_id = new_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=new_order)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        resp = self.client.put(f"/orders/{order.id}/ship")
+
+        # Ship a Packed Order
+        started_order = resp.get_json()
+        order_id = started_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{order_id}/ship")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated_order = resp.get_json()
+        self.assertEqual(updated_order["status"], "SHIPPING")
+
+        # pack a PACKING Order (testing idempotence)
+        resp = self.client.put(f"{BASE_URL}/{order_id}/ship")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        reshipped_order = resp.get_json()
+        self.assertEqual(reshipped_order["status"], "SHIPPING")
 
     def test_ship_order_not_found(self):
         """Ship an order when order does not exist"""
-        resp = self.client.put("/orders/0/ship")
+        resp = self.client.put(f"{BASE_URL}/0/ship")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_ship_order_with_canceled_order(self):
         """Ship an order with cancelled order"""
-        order = self._create_orders(1)[0]
-        order.status = OrderStatus.CANCELLED
-        resp = self.client.put(f"/orders/{order.id}", json=order.serialize())
+        # Create an Order to ship
+        test_order = OrderFactory()
+        resp = self.client.post(BASE_URL, json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Update the Order to Cancelled
+        new_order = resp.get_json()
+        new_order["status"] = "CANCELLED"
+        order_id = new_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=new_order)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        resp = self.client.put(f"/orders/{order.id}/ship")
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        cancelled_order = resp.get_json()
+        self.assertEqual(cancelled_order["status"], "CANCELLED")
+
+        # ship a cancelled order
+        resp = self.client.put(f"{BASE_URL}/{order_id}/ship")
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
 
     def test_ship_order_with_delivered_order(self):
         """Ship an order with delivered order"""
-        order = self._create_orders(1)[0]
-        order.status = OrderStatus.DELIVERED
-        resp = self.client.put(f"/orders/{order.id}", json=order.serialize())
+        # Create an Order to ship
+        test_order = OrderFactory()
+        resp = self.client.post(BASE_URL, json=test_order.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Update the Order to Delivered
+        new_order = resp.get_json()
+        new_order["status"] = "DELIVERED"
+        order_id = new_order["id"]
+        resp = self.client.put(f"{BASE_URL}/{order_id}", json=new_order)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        resp = self.client.put(f"/orders/{order.id}/ship")
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        delivered_order = resp.get_json()
+        self.assertEqual(delivered_order["status"], "DELIVERED")
+
+        # ship a delivered order
+        resp = self.client.put(f"{BASE_URL}/{order_id}/ship")
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
 
     def test_delete_order(self):
         """It should Delete a Order"""
@@ -860,7 +894,7 @@ class TestOrderService(TestCase):
         print(item)
         print("SENDING:", item.serialize())
         resp = self.client.post(
-            f"/orders/{order.id}/items",
+            f"{BASE_URL}/{order.id}/items",
             json=item.serialize(),
             content_type="application/json",
         )
@@ -868,7 +902,7 @@ class TestOrderService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         data = resp.get_json()
         item_id = data["id"]
-        response = self.client.get(f"/orders/{order.id}/items/{item_id}")
+        response = self.client.get(f"{BASE_URL}/{order.id}/items/{item_id}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
         self.assertIsNotNone(data)
@@ -989,6 +1023,7 @@ class TestOrderService(TestCase):
             f"{BASE_URL}/{order.id}/items?product_id={55}",
             content_type="application/json",
         )
+        print(resp)
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_query_item_by_name(self):

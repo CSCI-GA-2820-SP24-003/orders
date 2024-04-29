@@ -92,7 +92,9 @@ def step_impl(context, value, field_name):
     field_id = field_name.lower().replace(" ", "_")
     element = context.driver.find_element(By.ID, field_id)
     actual_value = element.get_attribute("value")
-    # print(f"Actual value of {field_name}: {actual_value}")
+    print(type(actual_value), type(value))
+    print(f"Actual value of {field_name}: {actual_value}")
+    print(f"Expected value of {field_name}: {value}")
     assert actual_value == value
 
 
@@ -146,9 +148,7 @@ def step_impl(context, name, table_name):
     table_id = "search_" + table_name.lower() + "_results"
     # print(table_id)
     found = WebDriverWait(context.driver, context.wait_seconds).until(
-        expected_conditions.text_to_be_present_in_element(
-            (By.ID, table_id), name
-        )
+        expected_conditions.text_to_be_present_in_element((By.ID, table_id), name)
     )
     assert found
 

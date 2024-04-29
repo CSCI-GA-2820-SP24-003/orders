@@ -507,7 +507,7 @@ $(function () {
     });
 
     // ****************************************
-    // Search for an Order
+    // Search for an Item
     // ****************************************
 
     $("#search-item-btn").click(function () {

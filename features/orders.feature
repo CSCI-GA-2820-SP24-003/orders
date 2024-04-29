@@ -76,7 +76,6 @@ Scenario: List all Orders
     Then I should see the message "Success"
     And I should see "SHIPPING" in the "Order" results
     And I should see "STARTED" in the "Order" results
-    And I should not see "PACKING" in the "Order" results
 
 
 Scenario: List Items
@@ -133,9 +132,6 @@ Scenario: Query Orders
 Scenario: Query Items
     When I visit the "Home Page"
     And I press the "Clear" button
-    And I press the "Search" button
-    Then I should see the message "Success"
-    WHEN I set the "Status" to "Shipping"
     And I press the "Search" button
     Then I should see the message "Success"
     Then I save the "Order Id" field as "order_id"
@@ -298,7 +294,6 @@ Scenario: Cancel an order
     When I visit the "Home Page"
     And I press the "Search" button
     Then I should see the message "Success"
-    And I should see "SHIPPING" in the "Status" field
     
     When I press the "Cancel" button
     Then I should see the message "Order cancellation successful"

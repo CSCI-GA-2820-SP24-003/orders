@@ -44,42 +44,76 @@ def index():
     """Root URL response"""
     return app.send_static_file("index.html")
 
+
 # Define the model so that the docs reflect what can be sent
 item_create_model = api.model(
     "Item",
     {
-        "order_id": fields.Integer(required=True, description="The Order an Item is associated with"),
-        "product_id": fields.Integer(required=True, description="The product an Item is associated with"),
+        "order_id": fields.Integer(
+            required=True, description="The Order an Item is associated with"
+        ),
+        "product_id": fields.Integer(
+            required=True, description="The product an Item is associated with"
+        ),
         "name": fields.String(required=True, description="The name of the Item"),
-        "quantity": fields.Integer(required=True, description="The quantity of the Item purchased"),
-        "unit_price": fields.Float(required=True, description="The unit price for the Item"),
-        "total_price": fields.Float(required=True, description="The total price of the Item purchased"),
-        "description": fields.String(required=True, description="The description for the Item")
-    }
+        "quantity": fields.Integer(
+            required=True, description="The quantity of the Item purchased"
+        ),
+        "unit_price": fields.Float(
+            required=True, description="The unit price for the Item"
+        ),
+        "total_price": fields.Float(
+            required=True, description="The total price of the Item purchased"
+        ),
+        "description": fields.String(
+            required=True, description="The description for the Item"
+        ),
+    },
 )
 
 item_model = api.inherit(
     "ItemModel",
     item_create_model,
-    {
-        "id": fields.Integer(readOnly=True, description="The ID for the Item")
-    }
+    {"id": fields.Integer(readOnly=True, description="The ID for the Item")},
 )
 
 order_create_model = api.model(
     "Order",
     {
-        "customer_id": fields.Integer(required=True, description="The ID of the customer purchasing the Order"),
-        "order_date": fields.Date(required=True, description="The date the Order was made",),
+        "customer_id": fields.Integer(
+            required=True, description="The ID of the customer purchasing the Order"
+        ),
+        "order_date": fields.Date(
+            required=True,
+            description="The date the Order was made",
+        ),
         # pylint: disable=protected-access
-        "status": fields.String(enum=OrderStatus, description="The status of the Order"),
-        "shipping_address": fields.String(required=True, description="The place where the Order is delivered to"),
-        "total_amount": fields.Float(required=True, description="The total cost of items in the Order"),
-        "payment_method": fields.String(required=True, description="The payment method for the Order"),
-        "shipping_cost": fields.Float(required=True, description="The shipping cost of the Order"),
-        "expected_date": fields.Date(required=True, description="The date the Order is expected to arrive"),
-        "order_notes": fields.String(required=False, description="The notes for the Order delivery"),
-        "items": fields.List(fields.Nested(item_create_model),required=False, description="The items within the Order")
+        "status": fields.String(
+            enum=OrderStatus, description="The status of the Order"
+        ),
+        "shipping_address": fields.String(
+            required=True, description="The place where the Order is delivered to"
+        ),
+        "total_amount": fields.Float(
+            required=True, description="The total cost of items in the Order"
+        ),
+        "payment_method": fields.String(
+            required=True, description="The payment method for the Order"
+        ),
+        "shipping_cost": fields.Float(
+            required=True, description="The shipping cost of the Order"
+        ),
+        "expected_date": fields.Date(
+            required=True, description="The date the Order is expected to arrive"
+        ),
+        "order_notes": fields.String(
+            required=False, description="The notes for the Order delivery"
+        ),
+        "items": fields.List(
+            fields.Nested(item_create_model),
+            required=False,
+            description="The items within the Order",
+        ),
     },
 )
 
@@ -87,28 +121,81 @@ order_model = api.inherit(
     "OrderModel",
     order_create_model,
     {
-        "id": fields.Integer(readOnly=True, description="The unique id assigned internally by service"),
+        "id": fields.Integer(
+            readOnly=True, description="The unique id assigned internally by service"
+        ),
     },
 )
 
 # query string arguments
 item_args = reqparse.RequestParser()
-item_args.add_argument("product-id", type=int, location="args", required=False, help="List Items with a specific product id")
-item_args.add_argument("name", type=str, location="args", required=False, help="List Items with a specific name")
+item_args.add_argument(
+    "product_id",
+    type=int,
+    location="args",
+    required=False,
+    help="List Items with a specific product id",
+)
+item_args.add_argument(
+    "name",
+    type=str,
+    location="args",
+    required=False,
+    help="List Items with a specific name",
+)
 
 order_args = reqparse.RequestParser()
-order_args.add_argument("order-start", type=str, location="args", required=False, help="List Orders ordered after a date")
-order_args.add_argument("order-end", type=str, location="args", required=False, help="List Orders ordered before a date")
-order_args.add_argument("total-min", type=str, default=0.0, location="args", required=False,
-                        help="List Orders with a total cost above a price point")
-order_args.add_argument("total-max", type=str, default=math.inf, location="args", required=False,
-                        help="List Orders with a total cost below a price point")
-order_args.add_argument("customer-id", type=str, location="args", required=False,
-                        help="List Orders from a specific customer")
-order_args.add_argument("status", type=str, location="args", required=False, help="List Orders with a specific Order status")
-order_args.add_argument("sort_by", type=str, location="args", required=False,
-                        help="List Orders sorted by a particular metric")
-
+order_args.add_argument(
+    "order-start",
+    type=str,
+    location="args",
+    required=False,
+    help="List Orders ordered after a date",
+)
+order_args.add_argument(
+    "order-end",
+    type=str,
+    location="args",
+    required=False,
+    help="List Orders ordered before a date",
+)
+order_args.add_argument(
+    "total-min",
+    type=str,
+    default=0.0,
+    location="args",
+    required=False,
+    help="List Orders with a total cost above a price point",
+)
+order_args.add_argument(
+    "total-max",
+    type=str,
+    default=math.inf,
+    location="args",
+    required=False,
+    help="List Orders with a total cost below a price point",
+)
+order_args.add_argument(
+    "customer-id",
+    type=str,
+    location="args",
+    required=False,
+    help="List Orders from a specific customer",
+)
+order_args.add_argument(
+    "status",
+    type=str,
+    location="args",
+    required=False,
+    help="List Orders with a specific Order status",
+)
+order_args.add_argument(
+    "sort_by",
+    type=str,
+    location="args",
+    required=False,
+    help="List Orders sorted by a particular metric",
+)
 
 
 ######################################################################
@@ -131,7 +218,6 @@ class OrderResource(Resource):
     DELETE /orders/{order_id} -  Deletes an Order with the id
     """
 
-
     ######################################################################
     # READ AN ORDER
     ######################################################################
@@ -148,11 +234,12 @@ class OrderResource(Resource):
 
         order = Order.find(order_id)
         if not order:
-            error(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+            error(
+                status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found."
+            )
 
         app.logger.info("Returning order: %s", order.id)
         return order.serialize(), status.HTTP_200_OK
-
 
     ######################################################################
     # UPDATE AN EXISTING ORDER
@@ -173,7 +260,9 @@ class OrderResource(Resource):
         # See if the order exists and abort if it doesn't
         order = Order.find(order_id)
         if not order:
-            abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+            abort(
+                status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found."
+            )
 
         # Update from the json in the body of the request
 
@@ -183,7 +272,6 @@ class OrderResource(Resource):
         order.id = order_id
         order.update()
         return order.serialize(), status.HTTP_200_OK
-
 
     ######################################################################
     # DELETE AN ORDER
@@ -201,8 +289,8 @@ class OrderResource(Resource):
         order = Order.find(order_id)
         if order:
             order.delete()
+            app.logger.info("Order with ID: %d delete complete.", order_id)
 
-        app.logger.info("Order with ID: %d delete complete.", order_id)
         return "", status.HTTP_204_NO_CONTENT
 
 
@@ -279,7 +367,6 @@ class OrderCollection(Resource):
         orders = query.all()
         return [order.serialize() for order in orders], status.HTTP_200_OK
 
-
     ######################################################################
     # CREATE A NEW ORDER
     ######################################################################
@@ -316,6 +403,7 @@ class OrderCollection(Resource):
 @api.param("order_id", "The Order identifier")
 class CancelOrderResource(Resource):
     """Cancel action on an Order"""
+
     @api.doc("cancel_orders")
     @api.response(404, "Order not found")
     @api.response(409, "Order cannot be cancelled")
@@ -330,7 +418,9 @@ class CancelOrderResource(Resource):
         # See if the order exists and abort if it doesn't
         order = Order.find(order_id)
         if not order:
-            abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+            abort(
+                status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found."
+            )
 
         # Abort Cancellation if order has been delivered
         if order.status in (OrderStatus.DELIVERED, OrderStatus.RETURNED):
@@ -353,6 +443,7 @@ class CancelOrderResource(Resource):
 @api.param("order_id", "The Order identifier")
 class DeliverOrderResource(Resource):
     """Deliver action on an Order"""
+
     @api.doc("deliver_orders")
     @api.response(404, "Order not found")
     @api.response(409, "Order cannot be delivered")
@@ -386,6 +477,7 @@ class DeliverOrderResource(Resource):
 @api.param("order_id", "The Order identifier")
 class PackOrderResource(Resource):
     """Pack action on an Order"""
+
     @api.doc("pack_orders")
     @api.response(404, "Order not found")
     @api.response(409, "Order cannot be packed")
@@ -419,6 +511,7 @@ class PackOrderResource(Resource):
 @api.param("order_id", "The Order identifier")
 class ShipOrderResource(Resource):
     """Ship action on an Order"""
+
     @api.doc("ship_orders")
     @api.response(404, "Order not found")
     @api.response(409, "Order cannot be shipped")
@@ -443,6 +536,7 @@ class ShipOrderResource(Resource):
             )
 
         return order.serialize(), status.HTTP_200_OK
+
 
 ######################################################################
 #  PATH: /orders/{id}
@@ -472,7 +566,9 @@ class ItemResource(Resource):
 
         This endpoint returns just an item
         """
-        app.logger.info("Request to retrieve Item %s for Order id: %s", (item_id, order_id))
+        app.logger.info(
+            "Request to retrieve Item %s for Order id: %s", (item_id, order_id)
+        )
 
         # See if the item exists and abort if it doesn't
         item = Item.find(item_id)
@@ -498,7 +594,9 @@ class ItemResource(Resource):
 
         This endpoint will update an Item based the body that is posted
         """
-        app.logger.info("Request to update Item %s for Order id: %s", (item_id, order_id))
+        app.logger.info(
+            "Request to update Item %s for Order id: %s", (item_id, order_id)
+        )
         check_content_type("application/json")
 
         # See if the item exists and abort if it doesn't
@@ -530,7 +628,9 @@ class ItemResource(Resource):
 
         This endpoint will delete an Item based the id specified in the path
         """
-        app.logger.info("Request to delete Item %s for Order id: %s", (item_id, order_id))
+        app.logger.info(
+            "Request to delete Item %s for Order id: %s", (item_id, order_id)
+        )
 
         # See if the item exists and delete it if it does
         item = Item.find(item_id)
@@ -544,7 +644,7 @@ class ItemResource(Resource):
 #  PATH: /orders/{order_id}/items
 ######################################################################
 @api.route("/orders/<int:order_id>/items", strict_slashes=False)
-@api.param('order_id', 'The Order identifier')
+@api.param("order_id", "The Order identifier")
 class ItemCollection(Resource):
     """Handles all interactions with collections of Items"""
 
@@ -568,9 +668,9 @@ class ItemCollection(Resource):
         items = order.items
         args = item_args.parse_args()
 
-        if args["product-id"]:
-            product_id = int(args["product-id"])
-            items = Item.find_by_product_id(product_id)
+        if args["product_id"]:
+            product_id = int(args["product_id"])
+            items = Item.find_by_product_id(order_id, product_id)
             if not items:
                 abort(
                     status.HTTP_400_BAD_REQUEST,

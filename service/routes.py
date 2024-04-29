@@ -234,7 +234,7 @@ class OrderResource(Resource):
 
         order = Order.find(order_id)
         if not order:
-            error(
+            abort(
                 status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found."
             )
 
@@ -359,10 +359,10 @@ class OrderCollection(Resource):
                     f"{args['customer-id']} is not a valid customer_id. Please enter an integer.",
                 )
 
-        if args["sort_by"] == "order_date":
-            query = query.order_by(Order.order_date.desc())
-        elif args["sort_by"] == "total_amount":
+        if args["sort_by"] == "total_amount":
             query = query.order_by(Order.total_amount.desc())
+        else:  # sort on "order_date" by default:
+            query = query.order_by(Order.order_date.desc())
 
         orders = query.all()
         return [order.serialize() for order in orders], status.HTTP_200_OK

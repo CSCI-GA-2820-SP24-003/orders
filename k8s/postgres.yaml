@@ -1,5 +1,5 @@
-# The petstore database should be created for you, if not here is the command:
-# psql -c "create database petstore;" -U postgres
+# The order store database should be created for you, if not here is the command:
+# psql -c "create database orderstore;" -U postgres
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -91,7 +91,7 @@ metadata:
   name: postgres-config
 data:
   postgres_user: postgres
-  postgres_db: petstore 
+  postgres_db: orderstore 
 ---
 # This secret can also be created from the command line using environment variables
 #

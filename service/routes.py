@@ -89,7 +89,7 @@ order_create_model = api.model(
         ),
         # pylint: disable=protected-access
         "status": fields.String(
-            enum=OrderStatus, description="The status of the Order"
+            enum=[e.value for e in OrderStatus], description="The status of the Order"
         ),
         "shipping_address": fields.String(
             required=True, description="The place where the Order is delivered to"

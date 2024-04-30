@@ -1,3 +1,5 @@
+# The order store database should be created for you, if not here is the command:
+# psql -c "create database orderstore;" -U postgres
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -18,7 +20,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:alpine
+          image: postgres:15-alpine
           ports:
             - containerPort: 5432
               protocol: TCP
@@ -28,9 +30,19 @@ spec:
                 secretKeyRef:
                   name: postgres-creds
                   key: password
+            - name: POSTGRES_USER
+              valueFrom:
+                  configMapKeyRef:
+                    name: postgres-config
+                    key: postgres_user
+            - name: POSTGRES_DB
+              valueFrom:
+                  configMapKeyRef:
+                    name: postgres-config
+                    key: postgres_db
           volumeMounts:
           - name: postgres-storage
-            mountPath: /var/lib/postgresql/data
+            mountPath: /var/lib/postgresql
           resources:
             limits:
               cpu: "0.50"
@@ -41,20 +53,21 @@ spec:
       volumes:
       - name: postgres-storage
         persistentVolumeClaim:
-          claimName: postgres-data
+          claimName: postgres-pvc
         # emptyDir: {}
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgres-data
+  name: postgres-pvc
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
-  storageClassName: "default"
+  # storageClassName: default
 
 ---
 apiVersion: v1
@@ -70,4 +83,29 @@ spec:
   ports:
     - port: 5432
       targetPort: 5432
+
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+data:
+  postgres_user: postgres
+  postgres_db: orderstore 
+---
+# This secret can also be created from the command line using environment variables
+#
+# export DATABASE_URI='postgresql://<place-url-to-database-here>'
+# export POSTGRES_PASSWORD='<place-password-here>'
+#
+# kubectl create secret generic postgres-creds \
+#     --from-literal=password=$POSTGRES_PASSWORD
+#     --from-literal=database_uri=$DATABASE_URI
+#
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-creds
+data:
+  password: cGdzM2NyM3Q=
+  database_uri: cG9zdGdyZXNxbCtwc3ljb3BnOi8vcG9zdGdyZXM6cGdzM2NyM3RAcG9zdGdyZXM6NTQzMi9wb3N0Z3Jlcw==

@@ -1,4 +1,4 @@
-# NYU DevOps Project Template
+# NYU DevOps Orders Project
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
@@ -7,8 +7,7 @@
 
 ## Overview
 
-This project template contains starter code for your class project. The `/service` folder contains your `models.py` file for your model and a `routes.py` file for your service. The `/tests` folder has test case starter code for testing the model and the service separately. All you need to do is add your functionality. You can use the [lab-flask-tdd](https://github.com/nyu-devops/lab-flask-tdd) for code examples to copy from.
-
+This project contains code for an orders microservice. The `/service` folder contains a `models` folder with an `order.py` and an `item.py` for the model and a `routes.py` file for the orders service. The `/tests` folder has test case code for testing the model and the service separately.
 ## Automatic Setup
 
 The best way to use this repo is to start your own repo using it as a git template. To do this just press the green **Use this template** button in GitHub and this will become the source for your repository.
@@ -37,8 +36,19 @@ The project contains the following:
 .flaskenv           - Environment variables to configure Flask
 .gitattributes      - File to gix Windows CRLF issues
 .devcontainers/     - Folder with support for VSCode Remote Containers
+.tekton             - Folder with support for Continuous Deployment
 dot-env-example     - copy to .env to use environment variables
+k8s/                - Folder that initializes a Kubernetes cluster
 pyproject.toml      - Poetry list of Python libraries required by your code
+
+features/                  - features python package
+├── orders.feature         - BDD Test Cases
+├── environment.py         - BDD setup steps
+├── steps                  - BDD code implemenation package
+    ├── order_steps.py     - BDD startup and cleanup
+    └── web_steps.py       - BDD step implementation
+
+
 
 service/                   - service python package
 ├── __init__.py            - package initializer
@@ -49,6 +59,11 @@ service/                   - service python package
 |   ├── error_handlers.py  - HTTP error handling code
 |   ├── log_handlers.py    - logging setup code
 |   └── status.py          - HTTP status constants
+├── static                 - html code package
+|   ├── css                - css files
+|   ├── images             - image files
+|   ├── js                 - javascript
+|   └── index.html         - Single-Page UI
 └   models                 - module with business models
     ├── __init__.py        - model initializer
     ├── item.py            - item model

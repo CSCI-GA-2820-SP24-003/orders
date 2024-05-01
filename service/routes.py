@@ -18,6 +18,26 @@
 Orders Service
 
 This service implements a REST API that allows you to manage Orders for a financial service.
+
+Paths:
+------
+GET / - Displays a UI for Selenium testing
+GET /orders - Returns a list all of the Orders
+GET /orders/{order_id} - Returns the Order with a given id number
+POST /orders - creates a new Order record in the database
+PUT /orders/{order_id} - updates an Order record in the database
+DELETE /orders/{order_id} - deletes an Order record in the database
+
+PUT /orders/{order_id}/cancel - cancels an Order record in the database
+PUT /orders/{order_id}/deliver - delivers an Order record in the database
+PUT /orders/{order_id}/packing - packs an Order record in the database
+PUT /orders/{order_id}/ship - ships an Order record in the database
+
+GET /orders/{order_id}/items - Returns a list all of the Items in an Order
+GET /orders/{order_id}/items/{item_id} - Returns the Item with a given id number
+POST /orders/{order_id}/items - creates a new Item record in the database
+PUT /orders/{order_id}/items/{item_id} - updates an Item record in the database
+DELETE /orders/{order_id}/items/{item_id} - deletes an Item record in the database
 """
 import math
 

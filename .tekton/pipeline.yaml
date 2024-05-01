@@ -19,6 +19,10 @@ spec:
       description: The name of the image to build
       name: IMAGE_NAME
       type: string
+    - default: 'https://orders-ihwahussain-dev.apps.sandbox-m3.1530.p1.openshiftapps.com/'
+      description: The URL to route for the microservice
+      name: BASE_URL
+      type: string
   tasks:
     - name: git-clone
       params:
@@ -136,6 +140,22 @@ spec:
       taskRef:
         kind: Task
         name: deploy-image
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+    - name: behave
+      params:
+        - name: BASE_URL
+          value: $(params.BASE_URL)
+        - name: WAIT_SECONDS
+          value: '60'
+        - name: DRIVER
+          value: chrome
+      runAfter:
+        - deploy-image
+      taskRef:
+        kind: Task
+        name: behave
       workspaces:
         - name: source
           workspace: pipeline-workspace
